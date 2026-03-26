@@ -4,22 +4,22 @@
   "description": "King of Cards — Command Centre Backend",
   "main": "backend/server.js",
   "scripts": {
-    "start":   "node backend/server.js",
-    "dev":     "nodemon backend/server.js",
-    "seed":    "node backend/scripts/seed.js",
-    "sync":    "node -e \"require('./backend/jobs/syncInstagram').runSync()\"",
-    "lint":    "eslint backend/**/*.js"
+    "start": "node backend/server.js",
+    "dev": "nodemon backend/server.js",
+    "seed": "node backend/scripts/seed.js",
+    "sync": "node -e \"require('./backend/jobs/syncInstagram').runSync()\"",
+    "lint": "eslint backend/**/*.js"
   },
   "dependencies": {
-    "axios":       "^1.7.2",
-    "bcryptjs":    "^2.4.3",
-    "cors":        "^2.8.5",
-    "dotenv":      "^16.4.5",
-    "express":     "^4.19.2",
-    "helmet":      "^7.1.0",
-    "mongoose":    "^8.4.1",
-    "morgan":      "^1.10.0",
-    "node-cron":   "^3.0.3"
+    "axios": "^1.13.6",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "helmet": "^7.1.0",
+    "mongoose": "^8.4.1",
+    "morgan": "^1.10.0",
+    "node-cron": "^3.0.3"
   },
   "devDependencies": {
     "nodemon": "^3.1.3"

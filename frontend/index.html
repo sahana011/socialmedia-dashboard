@@ -1413,7 +1413,7 @@ function addConn() { var n=prompt('Platform name:'); if(n) DB.conns.push({id:'c'
 // REEL MODAL
 // ═══════════════════════════════════════
 function openReel(id) {
-  var p = DB.posts.find(function(x){ return x.id===id; }); if (!p) return;
+  var p = DB.posts.find(function(x){ return x.id===id || x._id===id; }); if (!p) return;
   var stats = [['Views',fmt(p.views)],['Reach',fmt(p.reach)],['Likes',fmt(p.likes)],['Comments',String(p.comments||'—')],['Shares',String(p.shares||'—')],['Saves',String(p.saves||'—')],['Eng. Rate',p.engRate?p.engRate+'%':'—'],['Creator',p.assignedTo],['Page',p.page],['Post Date',p.postDate||'—']];
   document.getElementById('m-reel-box').innerHTML =
     '<div style="display:flex;max-height:88vh;">' +

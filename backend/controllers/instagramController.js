@@ -138,5 +138,22 @@ async function getDemographics(req, res, next) {
     next(err);
   }
 }
+// GET /api/instagram/test
+async function testConnection(req, res, next) {
+  try {
+    const igAccountId = process.env.INSTAGRAM_PAGE_ID;
+    const accessToken = process.env.META_ACCESS_TOKEN;
 
-module.exports = { syncPageInsights, syncMediaInsights, getDemographics };
+    const axios = require('axios');
+    const url = `https://graph.facebook.com/v19.0/${igAccountId}?fields=name,username,followers_count,media_count&access_token=${accessToken}`;
+    const { data } = await axios.get(url);
+
+    res.json({ success: true, data });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.response?.data?.error?.message || err.message
+    });
+  }
+}
+module.exports = { syncPageInsights, syncMediaInsights, getDemographics, testConnection };
