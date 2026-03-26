@@ -1,0 +1,1568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>King of Cards — Command Centre v4</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#06090f;--s1:#0c1018;--s2:#111827;--s3:#1a2332;--s4:#1f2d40;
+  --bdr:#1e2d3d;--bdr2:#263347;--bdr3:#2f4055;
+  --blue:#3b82f6;--blue-l:rgba(59,130,246,.14);
+  --teal:#0ea5e9;--green:#10b981;--green-l:rgba(16,185,129,.12);
+  --amber:#f59e0b;--amber-l:rgba(245,158,11,.12);
+  --red:#ef4444;--red-l:rgba(239,68,68,.10);
+  --purple:#8b5cf6;--purple-l:rgba(139,92,246,.12);
+  --pink:#ec4899;--orange:#f97316;
+  --t1:#f0f6ff;--t2:#94a3b8;--t3:#4b5e75;--t4:#2a3a4d;
+  --mono:'JetBrains Mono',monospace;
+  --font:'Inter',sans-serif;
+  --r:8px;--rl:12px;--rxl:16px;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;height:100vh;overflow:hidden;font-size:13px;}
+::-webkit-scrollbar{width:4px;height:4px;background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--bdr3);border-radius:2px;}
+button,input,select,textarea{font-family:var(--font);}
+
+/* SIDEBAR */
+#sb{width:214px;background:var(--s1);border-right:1px solid var(--bdr);display:flex;flex-direction:column;flex-shrink:0;}
+.brand{padding:15px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:9px;}
+.brand-ic{width:30px;height:30px;border-radius:7px;background:linear-gradient(135deg,var(--blue),var(--purple));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0;}
+.brand-nm{font-size:13px;font-weight:700;}
+.brand-sb{font-size:9px;color:var(--t3);margin-top:1px;}
+.sb-nav{flex:1;overflow-y:auto;padding:8px 0;}
+.sg{padding:11px 14px 3px;font-size:9px;font-weight:700;color:var(--t4);letter-spacing:1.4px;text-transform:uppercase;}
+.si{display:flex;align-items:center;gap:8px;padding:7px 14px;cursor:pointer;color:var(--t3);font-size:12px;font-weight:500;transition:all .12s;border-left:2px solid transparent;}
+.si:hover{color:var(--t2);background:rgba(255,255,255,.02);}
+.si.on{color:var(--blue);background:var(--blue-l);border-left-color:var(--blue);}
+.si svg{width:14px;height:14px;flex-shrink:0;}
+.si .badge{margin-left:auto;background:var(--purple-l);color:var(--purple);font-size:9px;font-weight:700;padding:1px 6px;border-radius:20px;}
+.sb-foot{padding:8px 10px;border-top:1px solid var(--bdr);position:relative;}
+.udrop{position:absolute;bottom:58px;left:8px;width:196px;background:var(--s3);border:1px solid var(--bdr2);border-radius:var(--rl);padding:4px;z-index:500;display:none;box-shadow:0 12px 40px rgba(0,0,0,.6);}
+.udrop.vis{display:block;}
+.uddi{padding:8px 10px;border-radius:7px;cursor:pointer;font-size:12px;color:var(--t2);display:flex;align-items:center;gap:8px;transition:all .12s;}
+.uddi:hover{background:var(--s4);color:var(--t1);}
+.uddi.red{color:var(--red);}
+.ud-sep{height:1px;background:var(--bdr);margin:4px 0;}
+.urow{display:flex;align-items:center;gap:8px;cursor:pointer;padding:7px 9px;border-radius:var(--r);transition:background .12s;}
+.urow:hover{background:var(--s2);}
+.av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;color:#fff;}
+
+/* MAIN */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+
+/* TOPBAR */
+#topbar{background:var(--s1);border-bottom:1px solid var(--bdr);padding:0 20px;height:50px;display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.tb-title{font-size:14px;font-weight:700;flex-shrink:0;}
+.tb-sep{flex:1;}
+.btn-sm{padding:5px 11px;border-radius:7px;border:1px solid var(--bdr);background:transparent;color:var(--t2);font-size:11.5px;font-weight:500;cursor:pointer;transition:all .12s;white-space:nowrap;}
+.btn-sm:hover{border-color:var(--bdr3);color:var(--t1);}
+.btn-pri{background:var(--blue);color:#fff;border:none;padding:6px 13px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;transition:opacity .12s;white-space:nowrap;}
+.btn-pri:hover{opacity:.87;}
+.btn-danger{background:var(--red-l);color:var(--red);border:1px solid rgba(239,68,68,.25);padding:5px 11px;border-radius:7px;font-size:11.5px;font-weight:600;cursor:pointer;}
+.btn-danger:hover{background:rgba(239,68,68,.2);}
+
+/* ===== GOOGLE ANALYTICS DATE PICKER ===== */
+.dp-wrap{position:relative;}
+.dp-pill{display:flex;align-items:center;gap:6px;background:var(--s2);border:1px solid var(--bdr);border-radius:7px;padding:5px 11px;cursor:pointer;font-size:11.5px;color:var(--t2);transition:all .12s;white-space:nowrap;user-select:none;}
+.dp-pill:hover,.dp-pill.open{border-color:var(--blue);color:var(--t1);}
+.dp-pill .rng{color:var(--t1);font-weight:500;}
+.dp-pill .cmp{color:var(--amber);font-size:10.5px;margin-left:4px;}
+.dp-panel{position:absolute;top:calc(100% + 6px);right:0;width:680px;background:var(--s2);border:1px solid var(--bdr2);border-radius:var(--rl);display:none;z-index:999;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.7);}
+.dp-panel.vis{display:flex;}
+.dp-presets{width:190px;background:var(--s1);border-right:1px solid var(--bdr);padding:8px 0;flex-shrink:0;}
+.dp-pre{padding:7px 15px;font-size:12px;color:var(--t2);cursor:pointer;border-left:2px solid transparent;transition:all .12s;}
+.dp-pre:hover{color:var(--t1);background:var(--s2);}
+.dp-pre.on{color:var(--blue);background:var(--blue-l);border-left-color:var(--blue);}
+.dp-pre-sep{height:1px;background:var(--bdr);margin:5px 0;}
+.dp-body{flex:1;padding:14px 16px;overflow:hidden;}
+.dp-cals{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:12px;}
+.dp-cal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.dp-cal-hd span{font-size:11.5px;font-weight:600;}
+.dp-cal-hd button{background:none;border:none;color:var(--t2);cursor:pointer;padding:2px 6px;border-radius:5px;font-size:14px;line-height:1;}
+.dp-cal-hd button:hover{background:var(--s3);color:var(--t1);}
+.dp-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;}
+.dp-dow{font-size:9px;color:var(--t3);text-align:center;padding:3px 0;font-weight:600;text-transform:uppercase;}
+.dp-day{font-size:11px;text-align:center;padding:5px 2px;cursor:pointer;border-radius:5px;color:var(--t2);transition:background .1s;}
+.dp-day:hover:not(.empty-day){background:var(--s4);color:var(--t1);}
+.dp-day.today{color:var(--blue);font-weight:700;}
+.dp-day.d-start,.dp-day.d-end{background:var(--blue);color:#fff;font-weight:600;}
+.dp-day.d-range{background:var(--blue-l);color:var(--t1);}
+.dp-day.empty-day{cursor:default;}
+.dp-compare{background:var(--s3);border-radius:var(--r);padding:9px 12px;margin-bottom:12px;}
+.dp-cmp-hd{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.dp-cmp-hd label{font-size:11.5px;font-weight:600;color:var(--t2);cursor:pointer;}
+.tog{width:30px;height:16px;background:var(--bdr2);border-radius:8px;cursor:pointer;position:relative;transition:background .15s;flex-shrink:0;}
+.tog.on{background:var(--blue);}
+.tog-k{width:12px;height:12px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;transition:left .15s;}
+.tog.on .tog-k{left:16px;}
+.cmp-opts{display:flex;gap:6px;margin-bottom:7px;}
+.cmp-opt{padding:4px 10px;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid var(--bdr);color:var(--t2);background:transparent;transition:all .12s;}
+.cmp-opt.on{background:var(--amber-l);border-color:var(--amber);color:var(--amber);}
+.cmp-range-lbl{font-size:11px;color:var(--t3);}
+.cmp-range-lbl strong{color:var(--amber);}
+.dp-footer{display:flex;justify-content:flex-end;gap:8px;border-top:1px solid var(--bdr);padding-top:11px;}
+
+/* COMPARE BANNER */
+.cmp-banner{background:var(--amber-l);border:1px solid rgba(245,158,11,.2);border-radius:var(--r);padding:6px 12px;margin-bottom:12px;display:none;align-items:center;gap:8px;font-size:11.5px;color:var(--amber);}
+.cmp-banner.vis{display:flex;}
+.cmp-badge{background:var(--amber);color:#000;font-size:9px;font-weight:800;padding:2px 7px;border-radius:20px;}
+
+/* PANELS */
+#area{flex:1;overflow-y:auto;padding:16px 20px;}
+.panel{display:none;}
+.panel.on{display:block;}
+
+/* KPI CARDS */
+.kg{display:grid;gap:10px;margin-bottom:14px;}
+.k2{grid-template-columns:repeat(2,1fr);}
+.k3{grid-template-columns:repeat(3,1fr);}
+.k4{grid-template-columns:repeat(4,1fr);}
+.k5{grid-template-columns:repeat(5,1fr);}
+.k6{grid-template-columns:repeat(6,1fr);}
+.kc{background:var(--s2);border:1px solid var(--bdr);border-radius:var(--rl);padding:13px 15px;cursor:pointer;transition:all .14s;position:relative;overflow:hidden;}
+.kc:hover{border-color:var(--bdr3);}
+.kc-l{font-size:9.5px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;}
+.kc-v{font-size:22px;font-weight:800;letter-spacing:-1px;line-height:1;margin-bottom:4px;}
+.kc-d{font-size:10.5px;color:var(--t3);min-height:15px;}
+.kc-d .up{color:var(--green);}
+.kc-d .dn{color:var(--red);}
+.kc-stripe{position:absolute;bottom:0;left:0;height:2px;width:36px;}
+
+/* CHART CARDS */
+.cc{background:var(--s2);border:1px solid var(--bdr);border-radius:var(--rl);padding:15px 17px;margin-bottom:12px;}
+.cc-hd{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:11px;gap:8px;}
+.cc-ti{font-size:12.5px;font-weight:700;}
+.cc-si{font-size:10.5px;color:var(--t3);margin-top:2px;}
+.cc-lg{display:flex;gap:12px;flex-wrap:wrap;}
+.lg{display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--t2);}
+.lg-sq{width:7px;height:7px;border-radius:2px;}
+.cw{position:relative;}
+.h180{height:180px;}.h200{height:200px;}.h220{height:220px;}.h260{height:260px;}.h300{height:300px;}
+
+/* GRIDS */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;}
+.g21{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:12px;}
+.g12{display:grid;grid-template-columns:1fr 2fr;gap:12px;margin-bottom:12px;}
+
+/* TABLES */
+.tc{background:var(--s2);border:1px solid var(--bdr);border-radius:var(--rl);overflow:hidden;margin-bottom:12px;}
+.tb{padding:9px 13px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+.tb-ttl{font-size:12.5px;font-weight:700;flex-shrink:0;}
+.flt{display:flex;gap:5px;flex:1;flex-wrap:wrap;}
+select.fi{background:var(--s3);border:1px solid var(--bdr);border-radius:6px;padding:4px 8px;color:var(--t1);font-size:11px;cursor:pointer;}
+input.fi{background:var(--s3);border:1px solid var(--bdr);border-radius:6px;padding:4px 9px;color:var(--t1);font-size:11px;width:150px;}
+input.fi::placeholder{color:var(--t3);}
+select.fi:focus,input.fi:focus{outline:none;border-color:var(--blue);}
+table{width:100%;border-collapse:collapse;}
+th{padding:7px 10px;font-size:9.5px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;text-align:left;border-bottom:1px solid var(--bdr);background:var(--s3);white-space:nowrap;}
+td{padding:8px 10px;font-size:11.5px;color:var(--t2);border-bottom:1px solid rgba(30,45,61,.7);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,.012);}
+.mono{font-family:var(--mono);font-size:10.5px;}
+.ed{cursor:text;}
+.ed:hover{background:rgba(59,130,246,.04)!important;}
+[contenteditable="true"]{outline:none;color:var(--t1)!important;background:rgba(59,130,246,.07)!important;border-bottom:1px dashed var(--blue)!important;}
+input.ci{background:transparent;border:none;color:var(--t2);font-size:11.5px;font-family:var(--font);width:100%;text-align:right;padding:0;}
+input.ci:focus{outline:none;color:var(--t1);border-bottom:1px solid var(--blue);}
+input.ci.gold{color:var(--amber);}
+input[type="checkbox"]{width:13px;height:13px;accent-color:var(--blue);cursor:pointer;}
+
+/* STATUS PILLS */
+.pill{padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;display:inline-block;white-space:nowrap;}
+.p-posted{background:rgba(16,185,129,.12);color:#34d399;border:1px solid rgba(16,185,129,.2);}
+.p-scheduled{background:rgba(59,130,246,.12);color:#60a5fa;border:1px solid rgba(59,130,246,.2);}
+.p-edited{background:rgba(245,158,11,.12);color:#fbbf24;border:1px solid rgba(245,158,11,.2);}
+.p-shooting{background:rgba(139,92,246,.12);color:#a78bfa;border:1px solid rgba(139,92,246,.2);}
+.p-planned{background:rgba(75,94,117,.18);color:#94a3b8;border:1px solid rgba(75,94,117,.2);}
+.p-repost{background:rgba(236,72,153,.12);color:#f472b6;border:1px solid rgba(236,72,153,.2);}
+
+/* PAGE CARDS */
+.pg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;}
+.pg-card{background:var(--s2);border:1px solid var(--bdr);border-radius:var(--rl);padding:13px 15px;cursor:pointer;transition:all .14s;}
+.pg-card:hover{border-color:var(--blue);transform:translateY(-1px);}
+.pg-card-hd{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:11px;}
+.pg-nm{font-size:13px;font-weight:700;}
+.pg-hn{font-size:10px;color:var(--t3);margin-top:2px;}
+.cdot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+.don{background:var(--green);box-shadow:0 0 6px rgba(16,185,129,.5);}
+.doff{background:var(--t3);}
+.pg-stats{display:flex;gap:12px;flex-wrap:wrap;}
+.pg-stat .v{font-size:15px;font-weight:800;letter-spacing:-.5px;}
+.pg-stat .l{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.4px;margin-top:1px;}
+
+/* CONTENT GRID */
+.c-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
+.c-card{background:var(--s2);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:all .13s;}
+.c-card:hover{border-color:var(--bdr3);transform:translateY(-1px);}
+.c-thumb{width:100%;aspect-ratio:9/16;background:linear-gradient(160deg,var(--s3),var(--s4));display:flex;align-items:center;justify-content:center;font-size:32px;position:relative;}
+.c-thumb-overlay{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.8));padding:10px 8px 8px;}
+.c-view{font-size:11px;font-weight:700;color:#fff;}
+.c-body{padding:9px 10px;}
+.c-sku{font-family:var(--mono);font-size:10px;color:var(--blue);margin-bottom:3px;}
+.c-desc{font-size:11px;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:5px;}
+.c-row{display:flex;justify-content:space-between;font-size:10px;color:var(--t3);}
+
+/* PEOPLE */
+.p-card{background:var(--s2);border:1px solid var(--bdr);border-radius:var(--rl);padding:11px 13px;cursor:pointer;transition:all .13s;display:flex;align-items:center;gap:10px;margin-bottom:7px;}
+.p-card:hover{border-color:var(--blue);}
+.pb{flex:1;height:3px;background:var(--s4);border-radius:2px;overflow:hidden;}
+.pb-fill{height:100%;border-radius:2px;}
+
+/* AI LAB */
+.ai-lab{background:var(--s2);border:1px solid var(--bdr);border-radius:var(--rl);overflow:hidden;}
+.ai-lab-hd{background:linear-gradient(135deg,rgba(139,92,246,.15),rgba(59,130,246,.1));border-bottom:1px solid var(--bdr);padding:13px 17px;display:flex;align-items:center;gap:10px;}
+.ai-lab-body{padding:16px;}
+.ai-tools{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:15px;}
+.ai-tool{background:var(--s3);border:1px solid var(--bdr);border-radius:var(--r);padding:10px 11px;cursor:pointer;transition:all .13s;text-align:center;}
+.ai-tool:hover,.ai-tool.on{border-color:var(--purple);background:var(--purple-l);}
+.ai-tool-ic{font-size:20px;margin-bottom:4px;}
+.ai-tool-nm{font-size:11px;font-weight:600;color:var(--t2);}
+.ai-tool-sub{font-size:10px;color:var(--t3);margin-top:2px;}
+.ai-ws{background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);display:flex;flex-direction:column;}
+.ai-ws-hd{padding:9px 13px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;}
+.ai-ws-body{flex:1;padding:13px;overflow-y:auto;max-height:380px;min-height:200px;}
+.ai-ws-inp{padding:9px 11px;border-top:1px solid var(--bdr);display:flex;gap:7px;align-items:flex-end;}
+.ai-textarea{flex:1;background:var(--s2);border:1px solid var(--bdr);border-radius:var(--r);padding:7px 11px;color:var(--t1);font-size:12px;resize:none;min-height:36px;max-height:80px;}
+.ai-textarea:focus{outline:none;border-color:var(--purple);}
+.ai-msg{margin-bottom:11px;}
+.ai-msg-u{text-align:right;}
+.ai-bbl{display:inline-block;padding:8px 12px;border-radius:10px;font-size:12px;line-height:1.6;max-width:88%;text-align:left;}
+.ai-msg-u .ai-bbl{background:var(--blue);color:#fff;}
+.ai-msg-a .ai-bbl{background:var(--s3);border:1px solid var(--bdr);color:var(--t2);white-space:pre-wrap;}
+.ai-typing{display:flex;gap:3px;padding:8px 12px;}
+.ai-typing span{width:5px;height:5px;border-radius:50%;background:var(--t3);animation:typanim 1s infinite;}
+.ai-typing span:nth-child(2){animation-delay:.15s;}
+.ai-typing span:nth-child(3){animation-delay:.3s;}
+@keyframes typanim{0%,60%,100%{transform:none}30%{transform:translateY(-4px)}}
+.ai-pulse{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--purple);animation:pulseaim 1.5s infinite;}
+@keyframes pulseaim{0%,100%{opacity:1}50%{opacity:.3}}
+.qchip{padding:4px 10px;border-radius:6px;border:1px solid var(--bdr);background:var(--s3);color:var(--t2);font-size:11px;cursor:pointer;transition:all .12s;}
+.qchip:hover{border-color:var(--purple);color:var(--purple);background:var(--purple-l);}
+
+/* MODALS */
+.mo{position:fixed;inset:0;background:rgba(6,9,15,.85);z-index:2000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .18s;backdrop-filter:blur(3px);}
+.mo.vis{opacity:1;pointer-events:all;}
+.mbox{background:var(--s2);border:1px solid var(--bdr2);border-radius:var(--rxl);max-width:95vw;max-height:90vh;overflow-y:auto;transform:scale(.97) translateY(5px);transition:transform .18s;box-shadow:0 20px 60px rgba(0,0,0,.7);}
+.mo.vis .mbox{transform:scale(1) translateY(0);}
+.mbox-xl{width:940px;}
+.mbox-md{width:640px;}
+.mbox-sm{width:420px;}
+.mh{padding:18px 20px 0;display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;}
+.mh-ti{font-size:16px;font-weight:800;}
+.mh-si{font-size:11px;color:var(--t3);margin-top:3px;}
+.mc{background:var(--s3);border:none;color:var(--t2);width:24px;height:24px;border-radius:6px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.mc:hover{background:var(--s4);color:var(--t1);}
+.mb{padding:0 20px 20px;}
+.mfoot{padding:11px 20px;border-top:1px solid var(--bdr);display:flex;gap:8px;justify-content:flex-end;}
+
+/* FORMS */
+.fg{display:flex;flex-direction:column;gap:4px;margin-bottom:9px;}
+.fg label{font-size:9.5px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;}
+.fg input,.fg select,.fg textarea{background:var(--s3);border:1px solid var(--bdr);border-radius:7px;padding:7px 10px;color:var(--t1);font-size:12px;transition:border-color .12s;}
+.fg input:focus,.fg select:focus,.fg textarea:focus{outline:none;border-color:var(--blue);}
+.fg textarea{resize:vertical;min-height:55px;}
+.fr2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.fr3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+
+/* MISC */
+.slbl{font-size:9.5px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:1.1px;margin-bottom:9px;}
+.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.tag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:5px;font-size:10.5px;font-weight:600;}
+.tag-p{background:var(--purple-l);color:var(--purple);}
+.tag-b{background:var(--blue-l);color:var(--blue);}
+.tag-g{background:var(--green-l);color:var(--green);}
+.tag-a{background:var(--amber-l);color:var(--amber);}
+a.lnk{color:var(--blue);font-size:11px;text-decoration:none;}
+a.lnk:hover{text-decoration:underline;}
+.conn-item{background:var(--s2);border:1px solid var(--bdr);border-radius:var(--r);padding:10px 13px;display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;}
+.conn-l{display:flex;align-items:center;gap:9px;}
+.conn-ic{width:32px;height:32px;border-radius:7px;background:var(--s3);display:flex;align-items:center;justify-content:center;font-size:15px;}
+.conn-nm{font-size:12.5px;font-weight:600;}
+.conn-st{font-size:10.5px;margin-top:1px;}
+.conn-on{color:var(--green);}
+.conn-off{color:var(--t3);}
+.loader-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;height:200px;gap:12px;}
+.loader-spinner{width:28px;height:28px;border:3px solid var(--bdr);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loader-txt{font-size:12px;color:var(--t3);}
+.err-wrap{display:flex;align-items:center;gap:10px;padding:20px;font-size:12px;color:var(--amber);}
+.sync-btn{background:var(--green-l);color:var(--green);border:1px solid rgba(16,185,129,.25);padding:5px 12px;border-radius:7px;font-size:11.5px;font-weight:600;cursor:pointer;}
+.sync-btn:hover{background:rgba(16,185,129,.22);}
+</style>
+<script src="/js/api.js"></script>
+<script src="/js/state.js"></script>
+</head>
+<body>
+<!-- SIDEBAR -->
+<div id="sb">
+  <div class="brand">
+    <div class="brand-ic">♠</div>
+    <div><div class="brand-nm">King of Cards</div><div class="brand-sb">Command Centre v4</div></div>
+  </div>
+  <div class="sb-nav">
+    <div class="sg">Analytics</div>
+    <div class="si on" data-p="overview" onclick="nav(this)">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1" stroke-width="1.8"/><rect x="14" y="3" width="7" height="7" rx="1" stroke-width="1.8"/><rect x="3" y="14" width="7" height="7" rx="1" stroke-width="1.8"/><rect x="14" y="14" width="7" height="7" rx="1" stroke-width="1.8"/></svg>Overview
+    </div>
+    <div class="si" data-p="pages" onclick="nav(this)">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-width="1.8"/><path d="M12 3c-4 4-4 14 0 18M12 3c4 4 4 14 0 18M3 12h18" stroke-width="1.5"/></svg>Pages
+    </div>
+    <div class="si" data-p="ads" onclick="nav(this)">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" stroke-width="1.8"/></svg>Advertisements
+    </div>
+    <div class="sg">Content</div>
+    <div class="si" data-p="content" onclick="nav(this)">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke-width="1.8"/></svg>
+      AI Content Lab<span class="badge">AI</span>
+    </div>
+    <div class="si" data-p="production" onclick="nav(this)">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4" stroke-width="1.8" stroke-linecap="round"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke-width="1.8"/></svg>Production
+    </div>
+    <div class="sg">Team</div>
+    <div class="si" data-p="people" onclick="nav(this)">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke-width="1.8"/><circle cx="9" cy="7" r="4" stroke-width="1.8"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.74" stroke-width="1.8"/></svg>People
+    </div>
+    <div class="si" data-p="learning" onclick="nav(this)">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z" stroke-width="1.8"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z" stroke-width="1.8"/></svg>Learning Hub
+    </div>
+    <div class="sg">System</div>
+    <div class="si" data-p="settings" onclick="nav(this)">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="1.8"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke-width="1.8"/></svg>Settings
+    </div>
+  </div>
+  <div class="sb-foot">
+    <div class="udrop" id="udrop">
+      <div class="uddi" id="ud-profile">👤 View Profile</div>
+      <div class="uddi" id="ud-switch">🔄 Switch Account</div>
+      <div class="ud-sep"></div>
+      <div class="uddi red" onclick="doLogout()">↩ Logout</div>
+    </div>
+    <div class="urow" onclick="toggleUD()">
+      <div class="av" id="uav" style="width:28px;height:28px;font-size:10px;background:linear-gradient(135deg,#3b82f6,#8b5cf6)">GP</div>
+      <div><div style="font-size:11.5px;font-weight:600" id="u-nm">Gungun Paladiya</div><div style="font-size:10px;color:var(--t3)" id="u-role">Admin</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+  <div id="topbar">
+    <div class="tb-title" id="tb-title">Overview</div>
+    <div class="tb-sep"></div>
+    <!-- DATE PICKER -->
+    <div class="dp-wrap" id="dp-wrap">
+      <div class="dp-pill" id="dp-pill" onclick="toggleDP()">
+        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" stroke-width="1.8"/><line x1="3" y1="9" x2="21" y2="9" stroke-width="1.8"/><line x1="8" y1="2" x2="8" y2="6" stroke-width="1.8"/><line x1="16" y1="2" x2="16" y2="6" stroke-width="1.8"/></svg>
+        <span class="rng" id="dp-rng-txt">1 Mar 2025 – 28 Feb 2026</span>
+        <span class="cmp" id="dp-cmp-txt" style="display:none"></span>
+        <svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" stroke-width="2.5"/></svg>
+      </div>
+      <div class="dp-panel" id="dp-panel">
+        <div class="dp-presets">
+          <div class="dp-pre on" data-pre="year" onclick="applyPre(this)">Last 12 months</div>
+          <div class="dp-pre" data-pre="last30" onclick="applyPre(this)">Last 30 days</div>
+          <div class="dp-pre" data-pre="last7" onclick="applyPre(this)">Last 7 days</div>
+          <div class="dp-pre" data-pre="thismonth" onclick="applyPre(this)">This month</div>
+          <div class="dp-pre" data-pre="lastmonth" onclick="applyPre(this)">Last month</div>
+          <div class="dp-pre" data-pre="today" onclick="applyPre(this)">Today</div>
+          <div class="dp-pre" data-pre="yesterday" onclick="applyPre(this)">Yesterday</div>
+          <div class="dp-pre-sep"></div>
+          <div class="dp-pre" data-pre="custom" onclick="applyPre(this)">Custom range</div>
+        </div>
+        <div class="dp-body">
+          <div class="dp-cals" id="dp-cals"></div>
+          <div class="dp-compare">
+            <div class="dp-cmp-hd">
+              <div class="tog" id="cmp-tog" onclick="toggleCmp()"><div class="tog-k"></div></div>
+              <label onclick="toggleCmp()">Compare to</label>
+              <span style="font-size:10.5px;color:var(--t3);margin-left:6px" id="cmp-lbl">— off</span>
+            </div>
+            <div id="cmp-opts-wrap" style="display:none">
+              <div class="cmp-opts">
+                <div class="cmp-opt on" data-cm="prev" onclick="setCmpMode(this)">Previous period</div>
+                <div class="cmp-opt" data-cm="year" onclick="setCmpMode(this)">Previous year</div>
+              </div>
+              <div class="cmp-range-lbl" id="cmp-rng-lbl"></div>
+            </div>
+          </div>
+          <div class="dp-footer">
+            <button class="btn-sm" onclick="cancelDP()">Cancel</button>
+            <button class="btn-pri" onclick="applyDP()">Apply</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="btn-sm" onclick="openAddPost()">+ New Post</button>
+    <button class="btn-pri" onclick="openAddMonth()">+ Add Data</button>
+  </div>
+
+  <div id="area">
+    <div class="cmp-banner" id="cmp-banner">
+      <div class="cmp-badge">COMPARING</div>
+      <span id="cmp-banner-txt"></span>
+    </div>
+    <div class="panel on" id="p-overview"></div>
+    <div class="panel" id="p-pages"></div>
+    <div class="panel" id="p-ads"></div>
+    <div class="panel" id="p-content"></div>
+    <div class="panel" id="p-production"></div>
+    <div class="panel" id="p-people"></div>
+    <div class="panel" id="p-learning"></div>
+    <div class="panel" id="p-settings"></div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="mo" id="m-reel" onclick="closeMO(event,'m-reel')"><div class="mbox mbox-xl" id="m-reel-box"></div></div>
+<div class="mo" id="m-page" onclick="closeMO(event,'m-page')"><div class="mbox mbox-xl" id="m-page-box"></div></div>
+<div class="mo" id="m-person" onclick="closeMO(event,'m-person')"><div class="mbox mbox-xl" id="m-person-box"></div></div>
+<div class="mo" id="m-post" onclick="closeMO(event,'m-post')"><div class="mbox mbox-md"><div class="mh"><div><div class="mh-ti">New Post / Reel</div><div class="mh-si">Add to production pipeline</div></div><button class="mc" onclick="closeM('m-post')">✕</button></div><div class="mb" id="m-post-body"></div></div></div>
+<div class="mo" id="m-data" onclick="closeMO(event,'m-data')"><div class="mbox mbox-sm"><div class="mh"><div><div class="mh-ti">Add Analytics Month</div></div><button class="mc" onclick="closeM('m-data')">✕</button></div><div class="mb" id="m-data-body"></div></div></div>
+<div class="mo" id="m-member" onclick="closeMO(event,'m-member')"><div class="mbox mbox-sm"><div class="mh"><div><div class="mh-ti">Add Team Member</div></div><button class="mc" onclick="closeM('m-member')">✕</button></div><div class="mb" id="m-member-body"></div></div></div>
+<div class="mo" id="m-switch" onclick="closeMO(event,'m-switch')"><div class="mbox mbox-sm"><div class="mh"><div><div class="mh-ti">Switch Account</div></div><button class="mc" onclick="closeM('m-switch')">✕</button></div><div class="mb" id="m-switch-body"></div></div></div>
+<div class="mo" id="m-profile" onclick="closeMO(event,'m-profile')"><div class="mbox mbox-sm"><div class="mh"><div><div class="mh-ti">My Profile</div></div><button class="mc" onclick="closeM('m-profile')">✕</button></div><div class="mb" id="m-profile-body"></div></div></div>
+<script>
+// ═══════════════════════════════════════
+// DATABASE
+// ═══════════════════════════════════════
+var DB = {
+  user:{id:'u1',name:'Gungun Paladiya',role:'Admin',initials:'GP',color:'#3b82f6',email:'gungun@kingofcards.in'},
+  accounts:[
+    {id:'u1',name:'Gungun Paladiya',role:'Admin',initials:'GP',color:'#3b82f6'},
+    {id:'u2',name:'Geetika',role:'Admin',initials:'GK',color:'#0ea5e9'},
+    {id:'u3',name:'Rahul',role:'Admin',initials:'RH',color:'#ec4899'},
+    {id:'u4',name:'Radhika',role:'Editor',initials:'RD',color:'#8b5cf6'}
+  ],
+  deleteLog:[],
+  aiHistory:{ideas:[],hooks:[],captions:[],scripts:[],hashtags:[],competitor:[],trends:[],strategy:[]},
+  metrics:[
+    {page:'Main',month:'Mar 2025',date:'2025-03-01',type:'Organic',views:2931469,reach:1749229,linkClicks:160668,profileVisits:132205,follows:11106,unfollows:8217,netFollowers:17122,messages:1571,adsSpent:0},
+    {page:'Main',month:'Mar 2025',date:'2025-03-01',type:'Paid',views:5169983,reach:5908374,linkClicks:0,profileVisits:136916,follows:14233,unfollows:0,netFollowers:0,messages:1940,adsSpent:118025},
+    {page:'Main',month:'Apr 2025',date:'2025-04-01',type:'Organic',views:6529210,reach:2357954,linkClicks:327661,profileVisits:222871,follows:10562,unfollows:7902,netFollowers:18758,messages:1648,adsSpent:0},
+    {page:'Main',month:'Apr 2025',date:'2025-04-01',type:'Paid',views:30177799,reach:12474406,linkClicks:0,profileVisits:256012,follows:16098,unfollows:0,netFollowers:0,messages:1295,adsSpent:215220},
+    {page:'Main',month:'May 2025',date:'2025-05-01',type:'Organic',views:4185938,reach:1465636,linkClicks:114365,profileVisits:98260,follows:5943,unfollows:8849,netFollowers:10298,messages:1623,adsSpent:0},
+    {page:'Main',month:'May 2025',date:'2025-05-01',type:'Paid',views:8001522,reach:5104114,linkClicks:0,profileVisits:93186,follows:13204,unfollows:0,netFollowers:0,messages:652,adsSpent:63860},
+    {page:'Main',month:'Jun 2025',date:'2025-06-01',type:'Organic',views:3122924,reach:1021038,linkClicks:5778,profileVisits:57266,follows:6260,unfollows:8028,netFollowers:-1485,messages:1036,adsSpent:0},
+    {page:'Main',month:'Jun 2025',date:'2025-06-01',type:'Paid',views:3629891,reach:2287959,linkClicks:0,profileVisits:3587,follows:283,unfollows:0,netFollowers:0,messages:32,adsSpent:5158},
+    {page:'Main',month:'Jul 2025',date:'2025-07-01',type:'Organic',views:2838108,reach:944555,linkClicks:23545,profileVisits:55158,follows:5181,unfollows:7601,netFollowers:2538,messages:2621,adsSpent:0},
+    {page:'Main',month:'Jul 2025',date:'2025-07-01',type:'Paid',views:2118801,reach:1322441,linkClicks:0,profileVisits:18712,follows:4958,unfollows:0,netFollowers:0,messages:357,adsSpent:30113},
+    {page:'Main',month:'Aug 2025',date:'2025-08-01',type:'Organic',views:2317960,reach:579672,linkClicks:79218,profileVisits:60694,follows:5934,unfollows:7623,netFollowers:12989,messages:1578,adsSpent:0},
+    {page:'Main',month:'Aug 2025',date:'2025-08-01',type:'Paid',views:10781831,reach:5000281,linkClicks:0,profileVisits:125337,follows:14678,unfollows:0,netFollowers:0,messages:1191,adsSpent:111034},
+    {page:'Main',month:'Sep 2025',date:'2025-09-01',type:'Organic',views:2424582,reach:455701,linkClicks:44797,profileVisits:65714,follows:9579,unfollows:7353,netFollowers:9909,messages:2360,adsSpent:0},
+    {page:'Main',month:'Sep 2025',date:'2025-09-01',type:'Paid',views:14285769,reach:6450741,linkClicks:0,profileVisits:116264,follows:7683,unfollows:0,netFollowers:0,messages:632,adsSpent:121817},
+    {page:'Main',month:'Oct 2025',date:'2025-10-01',type:'Organic',views:2930068,reach:746575,linkClicks:54059,profileVisits:77066,follows:9103,unfollows:7115,netFollowers:4409,messages:3987,adsSpent:0},
+    {page:'Main',month:'Oct 2025',date:'2025-10-01',type:'Paid',views:4363068,reach:3174810,linkClicks:0,profileVisits:48253,follows:2421,unfollows:0,netFollowers:0,messages:555,adsSpent:47380},
+    {page:'Main',month:'Nov 2025',date:'2025-11-01',type:'Organic',views:5556407,reach:1096584,linkClicks:612514,profileVisits:101976,follows:12963,unfollows:7718,netFollowers:10615,messages:3056,adsSpent:0},
+    {page:'Main',month:'Nov 2025',date:'2025-11-01',type:'Paid',views:16342726,reach:9095061,linkClicks:0,profileVisits:632553,follows:5370,unfollows:0,netFollowers:0,messages:1083,adsSpent:175313},
+    {page:'Main',month:'Dec 2025',date:'2025-12-01',type:'Organic',views:4766162,reach:1053172,linkClicks:982786,profileVisits:211717,follows:16179,unfollows:7702,netFollowers:8477,messages:3218,adsSpent:0},
+    {page:'Main',month:'Dec 2025',date:'2025-12-01',type:'Paid',views:20576328,reach:14522036,linkClicks:0,profileVisits:966409,follows:8181,unfollows:0,netFollowers:0,messages:1325,adsSpent:245807},
+    {page:'Main',month:'Jan 2026',date:'2026-01-01',type:'Organic',views:4485206,reach:1722398,linkClicks:989495,profileVisits:220883,follows:14967,unfollows:5210,netFollowers:9757,messages:3183,adsSpent:0},
+    {page:'Main',month:'Jan 2026',date:'2026-01-01',type:'Paid',views:26386801,reach:20488064,linkClicks:0,profileVisits:782260,follows:6695,unfollows:0,netFollowers:0,messages:1899,adsSpent:242171},
+    {page:'Main',month:'Feb 2026',date:'2026-02-01',type:'Organic',views:3124496,reach:815019,linkClicks:566971,profileVisits:24030,follows:14496,unfollows:7691,netFollowers:6805,messages:2908,adsSpent:0},
+    {page:'Main',month:'Feb 2026',date:'2026-02-01',type:'Paid',views:28969508,reach:15406355,linkClicks:0,profileVisits:635991,follows:4593,unfollows:0,netFollowers:0,messages:1467,adsSpent:289217},
+    {page:'Offer',month:'Mar 2025',date:'2025-03-01',type:'Organic',views:0,reach:235051,linkClicks:11664,profileVisits:14419,follows:1314,unfollows:96,netFollowers:2413,messages:0,adsSpent:0},
+    {page:'Offer',month:'Mar 2025',date:'2025-03-01',type:'Paid',views:0,reach:314278,linkClicks:0,profileVisits:10169,follows:1195,unfollows:0,netFollowers:0,messages:0,adsSpent:6620},
+    {page:'Offer',month:'Apr 2025',date:'2025-04-01',type:'Organic',views:314968,reach:519371,linkClicks:9857,profileVisits:8684,follows:1,unfollows:258,netFollowers:2691,messages:0,adsSpent:0},
+    {page:'Offer',month:'Apr 2025',date:'2025-04-01',type:'Paid',views:367591,reach:629929,linkClicks:0,profileVisits:20802,follows:2948,unfollows:0,netFollowers:0,messages:0,adsSpent:19058},
+    {page:'Offer',month:'May 2025',date:'2025-05-01',type:'Organic',views:2242977,reach:738325,linkClicks:90659,profileVisits:44210,follows:3709,unfollows:811,netFollowers:19953,messages:0,adsSpent:0},
+    {page:'Offer',month:'May 2025',date:'2025-05-01',type:'Paid',views:5018673,reach:2852546,linkClicks:0,profileVisits:87445,follows:17055,unfollows:0,netFollowers:0,messages:0,adsSpent:47150},
+    {page:'Offer',month:'Jun 2025',date:'2025-06-01',type:'Organic',views:1751815,reach:607849,linkClicks:32747,profileVisits:47028,follows:3571,unfollows:1634,netFollowers:6859,messages:302,adsSpent:0},
+    {page:'Offer',month:'Jun 2025',date:'2025-06-01',type:'Paid',views:9117027,reach:4448373,linkClicks:0,profileVisits:29106,follows:4922,unfollows:0,netFollowers:0,messages:143,adsSpent:34150},
+    {page:'Offer',month:'Jul 2025',date:'2025-07-01',type:'Organic',views:2854831,reach:871670,linkClicks:40847,profileVisits:76253,follows:6598,unfollows:1921,netFollowers:13046,messages:1722,adsSpent:0},
+    {page:'Offer',month:'Jul 2025',date:'2025-07-01',type:'Paid',views:3966993,reach:2017020,linkClicks:0,profileVisits:37562,follows:8369,unfollows:0,netFollowers:0,messages:846,adsSpent:51859},
+    {page:'Offer',month:'Aug 2025',date:'2025-08-01',type:'Organic',views:4168022,reach:1264153,linkClicks:59354,profileVisits:103482,follows:6634,unfollows:2883,netFollowers:31286,messages:2073,adsSpent:0},
+    {page:'Offer',month:'Aug 2025',date:'2025-08-01',type:'Paid',views:18226066,reach:7453923,linkClicks:0,profileVisits:101793,follows:27535,unfollows:0,netFollowers:0,messages:1335,adsSpent:139907},
+    {page:'Offer',month:'Sep 2025',date:'2025-09-01',type:'Organic',views:5308025,reach:1754820,linkClicks:24561,profileVisits:126303,follows:13036,unfollows:3774,netFollowers:15545,messages:4239,adsSpent:0},
+    {page:'Offer',month:'Sep 2025',date:'2025-09-01',type:'Paid',views:8125544,reach:3776759,linkClicks:0,profileVisits:52684,follows:6283,unfollows:0,netFollowers:0,messages:587,adsSpent:67172},
+    {page:'Offer',month:'Oct 2025',date:'2025-10-01',type:'Organic',views:8364711,reach:2645908,linkClicks:29760,profileVisits:168667,follows:4993,unfollows:3969,netFollowers:18818,messages:5337,adsSpent:0},
+    {page:'Offer',month:'Oct 2025',date:'2025-10-01',type:'Paid',views:4398438,reach:4118035,linkClicks:0,profileVisits:34377,follows:3131,unfollows:0,netFollowers:0,messages:400,adsSpent:40110},
+    {page:'Offer',month:'Nov 2025',date:'2025-11-01',type:'Organic',views:13315280,reach:5310710,linkClicks:65498,profileVisits:292940,follows:19796,unfollows:3969,netFollowers:18818,messages:4439,adsSpent:0},
+    {page:'Offer',month:'Nov 2025',date:'2025-11-01',type:'Paid',views:5910739,reach:2970938,linkClicks:0,profileVisits:232337,follows:2991,unfollows:0,netFollowers:0,messages:539,adsSpent:50998},
+    {page:'Offer',month:'Dec 2025',date:'2025-12-01',type:'Organic',views:8794619,reach:3464271,linkClicks:151940,profileVisits:143796,follows:17137,unfollows:5079,netFollowers:12058,messages:2997,adsSpent:0},
+    {page:'Offer',month:'Dec 2025',date:'2025-12-01',type:'Paid',views:6461793,reach:4560307,linkClicks:0,profileVisits:140199,follows:6829,unfollows:0,netFollowers:0,messages:1603,adsSpent:69600},
+    {page:'Offer',month:'Jan 2026',date:'2026-01-01',type:'Organic',views:4485206,reach:1722398,linkClicks:85977,profileVisits:568286,follows:9922,unfollows:5210,netFollowers:4712,messages:2263,adsSpent:0},
+    {page:'Offer',month:'Jan 2026',date:'2026-01-01',type:'Paid',views:3891724,reach:3891724,linkClicks:0,profileVisits:582884,follows:4663,unfollows:0,netFollowers:0,messages:920,adsSpent:7611},
+    {page:'Offer',month:'Feb 2026',date:'2026-02-01',type:'Organic',views:2045093,reach:630693,linkClicks:17093,profileVisits:34549,follows:3110,unfollows:3927,netFollowers:-817,messages:1582,adsSpent:0},
+    {page:'Offer',month:'Feb 2026',date:'2026-02-01',type:'Paid',views:1003831,reach:613379,linkClicks:0,profileVisits:16123,follows:340,unfollows:0,netFollowers:0,messages:109,adsSpent:10111}
+  ],
+  posts:[
+    {id:'p01',page:'Main',sku:'KPC33820',shootType:'Content',shootDate:'2025-12-05',editedDate:'2025-12-06',postDate:'2025-12-10',assignedTo:'Dharani',desc:'Top viral reel - card unboxing',status:'Posted',igUrl:'https://www.instagram.com/reel/DRt5BZbDExb/',workFile:'',remarks:'Best performer Dec',views:2800000,reach:1900000,likes:45000,comments:890,shares:7200,saves:12000,engRate:5.8,thumb:'🎬'},
+    {id:'p02',page:'Main',sku:'KPR25080',shootType:'Studio',shootDate:'2025-11-19',editedDate:'2025-11-22',postDate:'2025-12-01',assignedTo:'Dwarika',desc:'White elephant premium card',status:'Posted',igUrl:'https://www.instagram.com/reel/DRuQPUuD9Yw/',workFile:'',remarks:'',views:512000,reach:340000,likes:7800,comments:143,shares:890,saves:1240,engRate:3.1,thumb:'🐘'},
+    {id:'p03',page:'Main',sku:'KFR16090',shootType:'Store',shootDate:'2025-11-18',editedDate:'2025-11-19',postDate:'2025-12-01',assignedTo:'Dharani',desc:'Tri Blue Laser cut showcase',status:'Posted',igUrl:'https://www.instagram.com/reel/DRuRbqXkYvD/',workFile:'',remarks:'',views:284000,reach:192000,likes:4200,comments:87,shares:310,saves:620,engRate:2.4,thumb:'💙'},
+    {id:'p04',page:'Main',sku:'KNKO7602',shootType:'Making',shootDate:'2025-11-19',editedDate:'2025-11-20',postDate:'2025-12-02',assignedTo:'Dharani',desc:'Blue MDF making process',status:'Posted',igUrl:'',workFile:'',remarks:'',views:193000,reach:128000,likes:2900,comments:54,shares:210,saves:380,engRate:1.9,thumb:'🔵'},
+    {id:'p05',page:'Main',sku:'KNK50140',shootType:'Store',shootDate:'2025-12-01',editedDate:'2025-12-02',postDate:'2025-12-05',assignedTo:'Dwarika',desc:'Premium card collection display',status:'Posted',igUrl:'',workFile:'',remarks:'',views:421000,reach:280000,likes:6100,comments:110,shares:540,saves:980,engRate:2.8,thumb:'🃏'},
+    {id:'p06',page:'Main',sku:'KNK9202W',shootType:'Outdoor',shootDate:'2025-10-15',editedDate:'2025-10-16',postDate:'2025-10-20',assignedTo:'Pradeep',desc:'White premium card outdoor shoot',status:'Posted',igUrl:'',workFile:'',remarks:'',views:310000,reach:210000,likes:4500,comments:92,shares:380,saves:710,engRate:2.7,thumb:'🌿'},
+    {id:'p07',page:'Main',sku:'KJTS3685',shootType:'Store',shootDate:'2026-01-08',editedDate:'',postDate:'2026-01-26',assignedTo:'Dwarika',desc:'Store reel January',status:'Scheduled',igUrl:'',workFile:'',remarks:'',views:0,reach:0,likes:0,comments:0,shares:0,saves:0,engRate:0,thumb:'📦'},
+    {id:'p08',page:'Main',sku:'KNK4419',shootType:'Concept',shootDate:'2026-02-10',editedDate:'2026-02-14',postDate:'',assignedTo:'Gungun Paladiya',desc:'Concept reel - love theme',status:'Edited',igUrl:'',workFile:'',remarks:'',views:0,reach:0,likes:0,comments:0,shares:0,saves:0,engRate:0,thumb:'❤️'},
+    {id:'p09',page:'Main',sku:'KNK2036',shootType:'Content',shootDate:'2026-03-15',editedDate:'',postDate:'',assignedTo:'Meghana',desc:'March trending content',status:'Shooting',igUrl:'',workFile:'',remarks:'',views:0,reach:0,likes:0,comments:0,shares:0,saves:0,engRate:0,thumb:'🎥'},
+    {id:'p10',page:'Main',sku:'KFR16430',shootType:'Studio',shootDate:'2026-03-12',editedDate:'2026-03-14',postDate:'2026-03-20',assignedTo:'Dwarika',desc:'Laser cut frame collection',status:'Edited',igUrl:'',workFile:'',remarks:'',views:0,reach:0,likes:0,comments:0,shares:0,saves:0,engRate:0,thumb:'🖼️'},
+    {id:'p11',page:'Offer',sku:'KNK50250',shootType:'Store',shootDate:'2025-12-01',editedDate:'2025-12-01',postDate:'2025-12-01',assignedTo:'Dwarika',desc:'Orange ganesha offer',status:'Posted',igUrl:'https://www.instagram.com/reel/DRuZ91wkT1W/',workFile:'',remarks:'',views:198000,reach:132000,likes:3100,comments:62,shares:240,saves:410,engRate:2.1,thumb:'🧡'},
+    {id:'p12',page:'Offer',sku:'KNK9401G',shootType:'Store',shootDate:'2025-12-01',editedDate:'2025-12-01',postDate:'2025-12-01',assignedTo:'Dharani',desc:'Grey balaji card offer',status:'Posted',igUrl:'https://www.instagram.com/reel/DRudYk0Echa/',workFile:'',remarks:'',views:172000,reach:115000,likes:2600,comments:48,shares:196,saves:330,engRate:1.9,thumb:'🪨'},
+    {id:'p13',page:'Offer',sku:'KNKZ0676',shootType:'Store',shootDate:'2026-01-20',editedDate:'2026-01-21',postDate:'2026-01-22',assignedTo:'Dharani',desc:'Red ganesha offer reel',status:'Posted',igUrl:'',workFile:'',remarks:'',views:234000,reach:156000,likes:3800,comments:74,shares:312,saves:510,engRate:2.4,thumb:'🔴'},
+    {id:'p14',page:'Custom',sku:'CUSTOM-001',shootType:'Customized Card',shootDate:'2025-12-10',editedDate:'2025-12-12',postDate:'2025-12-13',assignedTo:'Dharani',desc:'Tracing card custom reel',status:'Posted',igUrl:'https://www.instagram.com/reel/DSNMRMDjBQL/',workFile:'',remarks:'',views:89000,reach:59000,likes:1400,comments:28,shares:96,saves:182,engRate:2.0,thumb:'✏️'},
+    {id:'p15',page:'Gifts',sku:'KNK7902P',shootType:'Making',shootDate:'2025-11-19',editedDate:'2025-11-20',postDate:'2025-12-01',assignedTo:'Dharani',desc:'Pink Box making reel',status:'Posted',igUrl:'https://www.instagram.com/reel/DRtvQMLDyvB/',workFile:'',remarks:'',views:143000,reach:95000,likes:2100,comments:38,shares:156,saves:248,engRate:1.9,thumb:'🎀'},
+    {id:'p16',page:'Gifts',sku:'KMMEX8310',shootType:'Studio',shootDate:'2025-11-22',editedDate:'2025-12-04',postDate:'2025-12-05',assignedTo:'Dharani',desc:'Floral box KMMX studio',status:'Posted',igUrl:'https://www.instagram.com/reel/DR374xjjmkA/',workFile:'',remarks:'',views:267000,reach:178000,likes:4100,comments:79,shares:320,saves:540,engRate:2.6,thumb:'🌸'},
+    {id:'p17',page:'Main',sku:'KNCM809R',shootType:'Making',shootDate:'2025-09-10',editedDate:'2025-09-12',postDate:'2025-09-15',assignedTo:'Uday',desc:'Red making reel process',status:'Posted',igUrl:'',workFile:'',remarks:'',views:190000,reach:128000,likes:2800,comments:55,shares:220,saves:360,engRate:2.0,thumb:'🔴'},
+    {id:'p18',page:'Main',sku:'KPR25088',shootType:'Studio',shootDate:'2026-03-10',editedDate:'',postDate:'2026-03-25',assignedTo:'Dwarika',desc:'Spring collection studio',status:'Planned',igUrl:'',workFile:'',remarks:'',views:0,reach:0,likes:0,comments:0,shares:0,saves:0,engRate:0,thumb:'🌱'}
+  ],
+  people:[
+    {id:'u1',name:'Gungun Paladiya',role:'Admin',team:'Strategy',initials:'GP',color:'#3b82f6',reels:12,shoots:12,edits:0,score:91,email:'gungun@kingofcards.in'},
+    {id:'u2',name:'Geetika',role:'Admin',team:'Strategy',initials:'GK',color:'#0ea5e9',reels:6,shoots:6,edits:0,score:87,email:'geetika@kingofcards.in'},
+    {id:'u3',name:'Rahul',role:'Admin',team:'Management',initials:'RH',color:'#ec4899',reels:0,shoots:0,edits:0,score:82,email:'rahul@kingofcards.in'},
+    {id:'u4',name:'Dharani',role:'Editor',team:'Video',initials:'DH',color:'#3b82f6',reels:54,shoots:60,edits:0,score:88,email:'dharani@kingofcards.in'},
+    {id:'u5',name:'Dwarika',role:'Editor',team:'Video',initials:'DW',color:'#10b981',reels:74,shoots:80,edits:0,score:94,email:'dwarika@kingofcards.in'},
+    {id:'u6',name:'Pradeep',role:'Editor',team:'Video',initials:'PR',color:'#8b5cf6',reels:12,shoots:14,edits:0,score:79,email:'pradeep@kingofcards.in'},
+    {id:'u7',name:'Uday',role:'Editor',team:'Video',initials:'UD',color:'#f59e0b',reels:12,shoots:13,edits:0,score:81,email:'uday@kingofcards.in'},
+    {id:'u8',name:'Meghana',role:'Editor',team:'Editing',initials:'MG',color:'#ec4899',reels:1,shoots:0,edits:8,score:73,email:'meghana@kingofcards.in'},
+    {id:'u9',name:'Radhika',role:'Editor',team:'Editing',initials:'RD',color:'#3b82f6',reels:0,shoots:0,edits:12,score:76,email:'radhika@kingofcards.in'},
+    {id:'u10',name:'Himanshi',role:'Editor',team:'Editing',initials:'HI',color:'#f97316',reels:0,shoots:0,edits:10,score:74,email:'himanshi@kingofcards.in'},
+    {id:'u11',name:'Lokesh',role:'Viewer',team:'Video',initials:'LK',color:'#64748b',reels:3,shoots:4,edits:0,score:68,email:'lokesh@kingofcards.in'}
+  ],
+  conns:[
+    {id:'c1',name:'Main Instagram',handle:'@kingofcards.in',icon:'📸',on:true,sync:'2 mins ago'},
+    {id:'c2',name:'Offer Instagram',handle:'@kingofcards.offers',icon:'📸',on:true,sync:'4 mins ago'},
+    {id:'c3',name:'Gifts Instagram',handle:'@kingofcards.gifts',icon:'📸',on:true,sync:'10 mins ago'},
+    {id:'c4',name:'Custom Instagram',handle:'@kingofcards.custom',icon:'📸',on:true,sync:'Just now'},
+    {id:'c5',name:'YouTube',handle:'@KingOfCards',icon:'▶',on:true,sync:'1 hr ago'},
+    {id:'c6',name:'Facebook',handle:'King of Cards',icon:'💬',on:true,sync:'1 hr ago'},
+    {id:'c7',name:'LinkedIn',handle:'—',icon:'💼',on:false,sync:'Never'},
+    {id:'c8',name:'Pinterest',handle:'—',icon:'📌',on:false,sync:'Never'},
+    {id:'c9',name:'Claude AI',handle:'Content generation engine',icon:'✦',on:false,sync:'Never'}
+  ]
+};
+
+// ═══════════════════════════════════════
+// CHART REGISTRY
+// ═══════════════════════════════════════
+var CH = {};
+function mkC(id, cfg) {
+  if (CH[id]) { try { CH[id].destroy(); } catch(e) {} delete CH[id]; }
+  var el = document.getElementById(id);
+  if (!el) return null;
+  var c = new Chart(el, cfg);
+  CH[id] = c;
+  return c;
+}
+var CX = {
+  responsive: true, maintainAspectRatio: false,
+  plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false, backgroundColor: '#1a2332', titleColor: '#f0f6ff', bodyColor: '#94a3b8', borderColor: '#1e2d3d', borderWidth: 1, padding: 9 } },
+  scales: { x: { grid: { color: 'rgba(30,45,61,.6)' }, ticks: { color: '#4b5e75', font: { size: 10 } } }, y: { grid: { color: 'rgba(30,45,61,.6)' }, ticks: { color: '#4b5e75', font: { size: 10 } } } }
+};
+
+// ═══════════════════════════════════════
+// UTILITY FUNCTIONS
+// ═══════════════════════════════════════
+function fmt(n) {
+  if (n === null || n === undefined || isNaN(n)) return '—';
+  var a = Math.abs(n);
+  if (a >= 10000000) return (n/10000000).toFixed(1) + 'Cr';
+  if (a >= 100000)   return (n/100000).toFixed(1) + 'L';
+  if (a >= 1000)     return (n/1000).toFixed(0) + 'K';
+  return Math.round(n).toLocaleString();
+}
+function fmtR(n) { return n || n === 0 ? '₹' + fmt(n) : '—'; }
+function sumF(arr, f) { return arr.reduce(function(a,r){ return a + (parseFloat(r[f]) || 0); }, 0); }
+function inRange(dateStr, from, to) {
+  if (!dateStr) return false;
+  var d = new Date(dateStr + 'T00:00:00');
+  var f = from instanceof Date ? from : new Date(from);
+  var t = to instanceof Date ? to : new Date(to);
+  return d >= f && d <= t;
+}
+function fmtDateShort(d) {
+  if (!d) return '—';
+  var dt = d instanceof Date ? d : new Date(d);
+  return dt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+}
+function pillCls(s) {
+  var m = { Posted:'p-posted', Scheduled:'p-scheduled', Edited:'p-edited', Shooting:'p-shooting', Planned:'p-planned', Repost:'p-repost' };
+  return m[s] || 'p-planned';
+}
+function engColor(v) {
+  if (v > 4) return '#34d399';
+  if (v > 2) return '#fbbf24';
+  return '#94a3b8';
+}
+
+// ═══════════════════════════════════════
+// GOOGLE ANALYTICS DATE PICKER
+// ═══════════════════════════════════════
+var DP = {
+  from: new Date('2025-03-01'),
+  to:   new Date('2026-02-28'),
+  tmpFrom: null, tmpTo:   null,
+  cmpEnabled: false, cmpMode: 'prev',
+  cmpFrom: null, cmpTo: null,
+  calYear: 2025, calMonth: 11,
+  selecting: 'from'
+};
+var MONTHS = ['Mar 2025','Apr 2025','May 2025','Jun 2025','Jul 2025','Aug 2025','Sep 2025','Oct 2025','Nov 2025','Dec 2025','Jan 2026','Feb 2026'];
+var FUTURE_MONTHS = ['Mar 2026','Apr 2026','May 2026','Jun 2026'];
+
+function getRange() { return { from: DP.from, to: DP.to }; }
+function getCmpRange() { return DP.cmpEnabled ? { from: DP.cmpFrom, to: DP.cmpTo } : null; }
+function filteredMets(page, type, range) {
+  var r = range || getRange();
+  return DB.metrics.filter(function(m) {
+    return (!page || m.page === page) && (!type || m.type === type) && inRange(m.date, r.from, r.to);
+  });
+}
+function filteredPosts(range) {
+  var r = range || getRange();
+  return DB.posts.filter(function(p) {
+    var d = p.postDate || p.shootDate;
+    return !d || inRange(d, r.from, r.to);
+  });
+}
+
+function applyPre(el) {
+  document.querySelectorAll('.dp-pre').forEach(function(e){ e.classList.remove('on'); });
+  el.classList.add('on');
+  var now = new Date(), p = el.dataset.pre;
+  var f, t = new Date(now);
+  t.setHours(23,59,59);
+  if (p === 'today')     { f = new Date(now); f.setHours(0,0,0); }
+  else if (p === 'yesterday') { f = new Date(now); f.setDate(f.getDate()-1); f.setHours(0,0,0); t = new Date(f); t.setHours(23,59,59); }
+  else if (p === 'last7')  { f = new Date(now); f.setDate(f.getDate()-6); f.setHours(0,0,0); }
+  else if (p === 'last30') { f = new Date(now); f.setDate(f.getDate()-29); f.setHours(0,0,0); }
+  else if (p === 'thismonth') { f = new Date(now.getFullYear(), now.getMonth(), 1); t = new Date(now.getFullYear(), now.getMonth()+1, 0); }
+  else if (p === 'lastmonth') { f = new Date(now.getFullYear(), now.getMonth()-1, 1); t = new Date(now.getFullYear(), now.getMonth(), 0); }
+  else if (p === 'year') { f = new Date('2025-03-01'); t = new Date('2026-02-28'); }
+  else return;
+  DP.tmpFrom = f; DP.tmpTo = t;
+  renderCals();
+}
+
+function toggleDP() {
+  var panel = document.getElementById('dp-panel');
+  var open = panel.classList.contains('vis');
+  if (!open) { DP.tmpFrom = DP.from; DP.tmpTo = DP.to; renderCals(); computeCmpRange(); }
+  panel.classList.toggle('vis');
+  document.getElementById('dp-pill').classList.toggle('open', !open);
+}
+function cancelDP() { document.getElementById('dp-panel').classList.remove('vis'); document.getElementById('dp-pill').classList.remove('open'); }
+function applyDP() {
+  if (DP.tmpFrom) DP.from = DP.tmpFrom;
+  if (DP.tmpTo)   DP.to   = DP.tmpTo || DP.tmpFrom;
+  if (DP.cmpEnabled) computeCmpRange();
+  cancelDP();
+  updatePillText();
+  updateCmpBanner();
+  refresh();
+}
+function toggleCmp() {
+  DP.cmpEnabled = !DP.cmpEnabled;
+  document.getElementById('cmp-tog').classList.toggle('on', DP.cmpEnabled);
+  document.getElementById('cmp-opts-wrap').style.display = DP.cmpEnabled ? 'block' : 'none';
+  if (DP.cmpEnabled) computeCmpRange();
+  else document.getElementById('cmp-lbl').textContent = '— off';
+}
+function setCmpMode(el) {
+  document.querySelectorAll('.cmp-opt').forEach(function(e){ e.classList.remove('on'); });
+  el.classList.add('on');
+  DP.cmpMode = el.dataset.cm;
+  computeCmpRange();
+}
+function computeCmpRange() {
+  if (!DP.cmpEnabled) return;
+  var from = DP.tmpFrom || DP.from, to = DP.tmpTo || DP.to;
+  var diff = to - from;
+  if (DP.cmpMode === 'prev') {
+    DP.cmpFrom = new Date(from - diff - 86400000);
+    DP.cmpTo   = new Date(from.getTime() - 86400000);
+  } else {
+    DP.cmpFrom = new Date(from); DP.cmpFrom.setFullYear(from.getFullYear()-1);
+    DP.cmpTo   = new Date(to);   DP.cmpTo.setFullYear(to.getFullYear()-1);
+  }
+  var lbl = fmtDateShort(DP.cmpFrom) + ' – ' + fmtDateShort(DP.cmpTo);
+  document.getElementById('cmp-lbl').textContent = lbl;
+  var rl = document.getElementById('cmp-rng-lbl');
+  if (rl) rl.innerHTML = 'Compare period: <strong>' + lbl + '</strong>';
+}
+
+function renderCals() {
+  var el = document.getElementById('dp-cals');
+  if (!el) return;
+  var months = [];
+  for (var i = 0; i < 2; i++) {
+    var m = DP.calMonth + i, y = DP.calYear;
+    if (m > 11) { m -= 12; y++; }
+    months.push({ m: m, y: y });
+  }
+  el.innerHTML = months.map(function(x){ return renderOneCal(x.m, x.y); }).join('');
+}
+function renderOneCal(month, year) {
+  var MN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var DW = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+  var first = new Date(year, month, 1).getDay();
+  var days  = new Date(year, month+1, 0).getDate();
+  var today = new Date();
+  var tF = DP.tmpFrom || DP.from, tT = DP.tmpTo || DP.to;
+  var prev = month === 0 ? { m:11, y:year-1 } : { m:month-1, y:year };
+  var next = month === 11 ? { m:0, y:year+1 } : { m:month+1, y:year };
+  var cells = '';
+  for (var i = 0; i < first; i++) cells += '<div class="dp-day empty-day"></div>';
+  for (var d = 1; d <= days; d++) {
+    var dt = new Date(year, month, d);
+    var cls = 'dp-day';
+    if (dt.toDateString() === today.toDateString()) cls += ' today';
+    var isStart = tF && dt.toDateString() === tF.toDateString();
+    var isEnd   = tT && dt.toDateString() === tT.toDateString();
+    if (isStart) cls += ' d-start';
+    else if (isEnd) cls += ' d-end';
+    else if (tF && tT && dt > tF && dt < tT) cls += ' d-range';
+    cells += '<div class="' + cls + '" onclick="selectDay(' + year + ',' + month + ',' + d + ')">' + d + '</div>';
+  }
+  return '<div>' +
+    '<div class="dp-cal-hd"><button onclick="navCal(' + prev.y + ',' + prev.m + ')">‹</button>' +
+    '<span>' + MN[month] + ' ' + year + '</span>' +
+    '<button onclick="navCal(' + next.y + ',' + next.m + ')">›</button></div>' +
+    '<div class="dp-grid">' + DW.map(function(d){ return '<div class="dp-dow">' + d + '</div>'; }).join('') + cells + '</div>' +
+    '</div>';
+}
+function navCal(y, m) { DP.calYear = y; DP.calMonth = m; renderCals(); }
+function selectDay(y, m, d) {
+  var dt = new Date(y, m, d);
+  if (!DP.tmpFrom || (DP.tmpFrom && DP.tmpTo)) {
+    DP.tmpFrom = dt; DP.tmpTo = null; DP.selecting = 'to';
+  } else if (DP.selecting === 'to' && dt >= DP.tmpFrom) {
+    DP.tmpTo = dt; DP.selecting = 'from';
+  } else {
+    DP.tmpFrom = dt; DP.tmpTo = null; DP.selecting = 'to';
+  }
+  renderCals(); computeCmpRange();
+}
+function updatePillText() {
+  document.getElementById('dp-rng-txt').textContent = fmtDateShort(DP.from) + ' – ' + fmtDateShort(DP.to);
+  var ce = document.getElementById('dp-cmp-txt');
+  if (DP.cmpEnabled && DP.cmpFrom) {
+    ce.style.display = '';
+    ce.textContent = 'vs ' + fmtDateShort(DP.cmpFrom) + ' – ' + fmtDateShort(DP.cmpTo);
+  } else {
+    ce.style.display = 'none';
+  }
+}
+function updateCmpBanner() {
+  var b = document.getElementById('cmp-banner');
+  var t = document.getElementById('cmp-banner-txt');
+  if (DP.cmpEnabled && DP.cmpFrom) {
+    b.classList.add('vis');
+    t.textContent = fmtDateShort(DP.from) + ' – ' + fmtDateShort(DP.to) + '  vs  ' + fmtDateShort(DP.cmpFrom) + ' – ' + fmtDateShort(DP.cmpTo);
+  } else {
+    b.classList.remove('vis');
+  }
+}
+function diffBadge(curr, prev, invertGood) {
+  if (!prev) return '';
+  var pct = ((curr - prev) / Math.abs(prev) * 100).toFixed(1);
+  var good = invertGood ? (curr < prev) : (curr > prev);
+  return '<span class="' + (good?'up':'dn') + '">' + (good?'▲':'▼') + ' ' + Math.abs(pct) + '%</span> vs prev period';
+}
+
+// ═══════════════════════════════════════
+// NAV
+// ═══════════════════════════════════════
+var TITLES = { overview:'Overview', pages:'Pages', ads:'Advertisements', content:'AI Content Lab', production:'Production', people:'People', learning:'Learning Hub', settings:'Settings' };
+function nav(el) {
+  document.querySelectorAll('.si').forEach(function(n){ n.classList.remove('on'); });
+  document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('on'); });
+  el.classList.add('on');
+  var id = el.dataset.p;
+  document.getElementById('p-' + id).classList.add('on');
+  document.getElementById('tb-title').textContent = TITLES[id];
+  renderPanel(id);
+}
+function refresh() { var a = document.querySelector('.si.on'); if (a) renderPanel(a.dataset.p); }
+function renderPanel(id) {
+  var fns = { overview:renderOverview, pages:renderPages, ads:renderAds, content:renderContent, production:renderProduction, people:renderPeople, learning:renderLearning, settings:renderSettings };
+  if (fns[id]) fns[id]();
+}
+
+// ═══════════════════════════════════════
+// OVERVIEW
+// ═══════════════════════════════════════
+function renderOverview() {
+  var el = document.getElementById('p-overview');
+  var range = getRange(), cmp = getCmpRange();
+  var mPaid = filteredMets('Main','Paid',range), mOrg = filteredMets('Main','Organic',range);
+  var allPaid = filteredMets(null,'Paid',range), allOrg = filteredMets(null,'Organic',range);
+  var views   = sumF(mPaid.concat(mOrg), 'views');
+  var reach   = sumF(mPaid.concat(mOrg), 'reach');
+  var follows = sumF(allPaid.concat(allOrg), 'follows');
+  var spend   = sumF(allPaid, 'adsSpent');
+  var fp      = filteredPosts(range);
+  var posted  = fp.filter(function(p){ return p.status === 'Posted'; });
+  var avgEng  = posted.length ? (posted.reduce(function(a,p){ return a+p.engRate; },0)/posted.length).toFixed(1) : 0;
+  var cmpV='', cmpR='', cmpF='', cmpS='', cmpP='', cmpE='';
+  if (cmp) {
+    var cp = filteredMets('Main','Paid',cmp), co = filteredMets('Main','Organic',cmp);
+    var cap = filteredMets(null,'Paid',cmp), cao = filteredMets(null,'Organic',cmp);
+    var pv = sumF(cp.concat(co),'views'), pr = sumF(cp.concat(co),'reach');
+    var pf = sumF(cap.concat(cao),'follows'), ps = sumF(cap,'adsSpent');
+    var cposts = filteredPosts(cmp).filter(function(p){ return p.status==='Posted'; });
+    var pe = cposts.length ? (cposts.reduce(function(a,p){ return a+p.engRate; },0)/cposts.length).toFixed(1) : 0;
+    cmpV=diffBadge(views,pv); cmpR=diffBadge(reach,pr); cmpF=diffBadge(follows,pf); cmpS=diffBadge(spend,ps,true); cmpP=diffBadge(posted.length,cposts.length); cmpE=diffBadge(avgEng,pe);
+  }
+  var ML = MONTHS.filter(function(m){ return DB.metrics.some(function(r){ return r.month===m && inRange(r.date,range.from,range.to); }); });
+  var topPosts = DB.posts.filter(function(p){ return p.views > 0; }).sort(function(a,b){ return b.views-a.views; }).slice(0,3);
+
+  el.innerHTML =
+    '<div class="kg k6">' +
+    [['Total Views',fmt(views),cmpV,'#3b82f6'],['Total Reach',fmt(reach),cmpR,'#0ea5e9'],
+     ['Followers',fmt(follows),cmpF,'#10b981'],['Ad Spend',fmtR(spend),cmpS,'#f59e0b'],
+     ['Content Posted',posted.length,cmpP,'#8b5cf6'],['Avg Engagement',avgEng+'%',cmpE,'#ec4899']]
+    .map(function(k){ return '<div class="kc"><div class="kc-l">'+k[0]+'</div><div class="kc-v" style="color:'+k[3]+'">'+k[1]+'</div><div class="kc-d">'+k[2]+'</div><div class="kc-stripe" style="background:'+k[3]+'"></div></div>'; })
+    .join('') + '</div>' +
+    '<div class="g21"><div class="cc" style="margin:0"><div class="cc-hd"><div><div class="cc-ti">Main IG — Reach Trend</div><div class="cc-si">Organic vs Paid (M) · Ad Spend overlay</div></div><div class="cc-lg"><div class="lg"><div class="lg-sq" style="background:#3b82f6"></div>Organic</div><div class="lg"><div class="lg-sq" style="background:rgba(14,165,233,.5)"></div>Paid</div><div class="lg"><div class="lg-sq" style="background:#f59e0b"></div>Spend</div></div></div><div class="cw h260"><canvas id="ov-reach"></canvas></div></div>' +
+    '<div class="cc" style="margin:0"><div class="cc-hd"><div class="cc-ti">Content Split</div></div><div class="cw h260"><canvas id="ov-pages"></canvas></div></div></div>' +
+    '<div class="g3"><div class="cc" style="margin:0"><div class="cc-hd"><div class="cc-ti">Cost / Follower</div><div class="cc-si">Lower is better</div></div><div class="cw h180"><canvas id="ov-cpf"></canvas></div></div>' +
+    '<div class="cc" style="margin:0"><div class="cc-hd"><div class="cc-ti">Monthly Ad Spend</div></div><div class="cw h180"><canvas id="ov-spd"></canvas></div></div>' +
+    '<div class="cc" style="margin:0"><div class="cc-hd"><div class="cc-ti">Shoot Types</div></div><div class="cw h180"><canvas id="ov-typ"></canvas></div></div></div>' +
+    '<div class="slbl">Top Performing Content</div><div class="kg k3">' +
+    topPosts.map(function(p){ return miniCard(p); }).join('') + '</div>';
+
+  setTimeout(function(){
+    var orgR  = ML.map(function(m){ return sumF(DB.metrics.filter(function(r){ return r.month===m&&r.page==='Main'&&r.type==='Organic'; }),'reach')/1e6; });
+    var paidR = ML.map(function(m){ return sumF(DB.metrics.filter(function(r){ return r.month===m&&r.page==='Main'&&r.type==='Paid'; }),'reach')/1e6; });
+    var spdD  = ML.map(function(m){ return sumF(DB.metrics.filter(function(r){ return r.month===m&&r.type==='Paid'; }),'adsSpent')/1000; });
+    var ds = [
+      {label:'Organic',data:orgR,backgroundColor:'rgba(59,130,246,.3)',borderColor:'#3b82f6',borderWidth:1.5,fill:true,tension:.3,pointRadius:2,yAxisID:'y',type:'line'},
+      {label:'Paid',data:paidR,backgroundColor:'rgba(14,165,233,.15)',borderColor:'rgba(14,165,233,.6)',borderWidth:1.5,fill:true,tension:.3,pointRadius:2,yAxisID:'y',type:'line'},
+      {label:'Spend',data:spdD,borderColor:'#f59e0b',backgroundColor:'transparent',borderWidth:1.5,pointRadius:3,tension:.3,yAxisID:'y2',type:'line'}
+    ];
+    if (cmp) {
+      var cML = MONTHS.filter(function(m){ return DB.metrics.some(function(r){ return r.month===m&&inRange(r.date,cmp.from,cmp.to); }); });
+      var cR = cML.map(function(m){ return sumF(DB.metrics.filter(function(r){ return r.month===m&&r.page==='Main'&&r.type==='Organic'; }),'reach')/1e6; });
+      ds.push({label:'Prev',data:cR,borderColor:'rgba(245,158,11,.45)',borderDash:[4,3],borderWidth:1.5,backgroundColor:'transparent',tension:.3,pointRadius:2,yAxisID:'y',type:'line'});
+    }
+    mkC('ov-reach',{type:'bar',data:{labels:ML,datasets:ds},options:Object.assign({},CX,{plugins:Object.assign({},CX.plugins),scales:{x:CX.scales.x,y:Object.assign({},CX.scales.y,{position:'left',ticks:{color:'#4b5e75',font:{size:10},callback:function(v){return v+'M'}}}),y2:{position:'right',grid:{display:false},ticks:{color:'#f59e0b',font:{size:10},callback:function(v){return '₹'+v+'k'}}}}})});
+    mkC('ov-pages',{type:'doughnut',data:{labels:['Main','Offer','YouTube','Custom','Gifts'],datasets:[{data:[192,177,230,12,19],backgroundColor:['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ec4899'],borderWidth:2,borderColor:'#111827'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:'#94a3b8',font:{size:11},boxWidth:9,padding:8}}}}});
+    var cpfD = ML.map(function(m){ var s=sumF(DB.metrics.filter(function(r){ return r.month===m&&r.page==='Main'&&r.type==='Paid'; }),'adsSpent'); var f=sumF(DB.metrics.filter(function(r){ return r.month===m&&r.page==='Main'&&r.type==='Paid'; }),'follows'); return f?Math.round(s/f):0; });
+    mkC('ov-cpf',{type:'line',data:{labels:ML,datasets:[{data:cpfD,borderColor:'#10b981',backgroundColor:'rgba(16,185,129,.06)',fill:true,tension:.3,pointRadius:3,pointBackgroundColor:cpfD.map(function(v){ return v>40?'#ef4444':v>20?'#f59e0b':'#10b981'; })}]},options:Object.assign({},CX,{plugins:CX.plugins,scales:{x:CX.scales.x,y:Object.assign({},CX.scales.y,{ticks:{color:'#4b5e75',font:{size:10},callback:function(v){return '₹'+v}}})}})});
+    mkC('ov-spd',{type:'bar',data:{labels:ML,datasets:[{data:spdD,backgroundColor:spdD.map(function(v,i){ return v===Math.max.apply(null,spdD)?'#f59e0b':'rgba(245,158,11,.35)'; }),borderRadius:3}]},options:Object.assign({},CX,{plugins:CX.plugins,scales:{x:CX.scales.x,y:Object.assign({},CX.scales.y,{ticks:{color:'#4b5e75',font:{size:10},callback:function(v){return '₹'+v+'k'}}})}})});
+    var tps = ['Store','Making','Studio','Content','Carousel','Outdoor','Influencer','Concept'];
+    mkC('ov-typ',{type:'doughnut',data:{labels:tps,datasets:[{data:tps.map(function(t){ return DB.posts.filter(function(p){ return p.shootType===t; }).length; }),backgroundColor:['#3b82f6','#10b981','#8b5cf6','#f59e0b','#ec4899','#0ea5e9','#f97316','#94a3b8'],borderWidth:2,borderColor:'#111827'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:'#94a3b8',font:{size:10},boxWidth:9,padding:6}}}}});
+  }, 0);
+}
+function miniCard(p) {
+  return '<div class="kc" style="cursor:pointer" onclick="openReel(\''+p.id+'\')">' +
+    '<div style="display:flex;align-items:center;gap:9px;margin-bottom:9px">' +
+    '<div style="width:36px;height:36px;border-radius:8px;background:var(--s3);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">'+p.thumb+'</div>' +
+    '<div><div class="mono" style="color:var(--blue);font-size:10px">'+p.sku+'</div><div style="font-size:11.5px;font-weight:600;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+p.desc+'</div></div></div>' +
+    '<div class="kg k3" style="gap:6px;margin:0">' +
+    '<div style="background:var(--s3);border-radius:6px;padding:7px 8px"><div style="font-size:13px;font-weight:800">'+fmt(p.views)+'</div><div style="font-size:9px;color:var(--t3)">Views</div></div>' +
+    '<div style="background:var(--s3);border-radius:6px;padding:7px 8px"><div style="font-size:13px;font-weight:800">'+fmt(p.likes)+'</div><div style="font-size:9px;color:var(--t3)">Likes</div></div>' +
+    '<div style="background:var(--s3);border-radius:6px;padding:7px 8px"><div style="font-size:13px;font-weight:800;color:'+engColor(p.engRate)+'">'+p.engRate+'%</div><div style="font-size:9px;color:var(--t3)">Eng.</div></div>' +
+    '</div></div>';
+}
+
+// ═══════════════════════════════════════
+// PAGES — Deep Analytics
+// ═══════════════════════════════════════
+function renderPages() {
+  var el = document.getElementById('p-pages');
+  var range = getRange();
+  var pageList = [
+    {id:'main',name:'Main Instagram',handle:'@kingofcards.in',icon:'📸',on:true,db:'Main'},
+    {id:'offer',name:'Offer Instagram',handle:'@kingofcards.offers',icon:'📸',on:true,db:'Offer'},
+    {id:'yt',name:'YouTube',handle:'@KingOfCards',icon:'▶',on:true,db:'YouTube'},
+    {id:'custom',name:'Custom Instagram',handle:'@kingofcards.custom',icon:'📸',on:true,db:'Custom'},
+    {id:'gifts',name:'Gifts Instagram',handle:'@kingofcards.gifts',icon:'📸',on:true,db:'Gifts'},
+    {id:'gmb',name:'Google My Business',handle:'3 branches',icon:'📍',on:true,db:'GMB'}
+  ];
+  el.innerHTML = '<div class="pg-grid">' +
+    pageList.map(function(pg) {
+      var mets = filteredMets(pg.db, null, range);
+      var orgR = sumF(mets.filter(function(r){ return r.type==='Organic'; }), 'reach');
+      var spd  = sumF(mets.filter(function(r){ return r.type==='Paid'; }), 'adsSpent');
+      var flws = sumF(mets, 'follows');
+      var cnt  = DB.posts.filter(function(p){ return p.page===pg.db; }).length;
+      return '<div class="pg-card" onclick="openPageDet(\''+pg.id+'\')"><div class="pg-card-hd"><div><div class="pg-nm">'+pg.name+'</div><div class="pg-hn">'+pg.handle+'</div></div><div class="cdot '+(pg.on?'don':'doff')+'"></div></div>' +
+        '<div class="pg-stats"><div class="pg-stat"><div class="v">'+fmt(orgR||cnt)+'</div><div class="l">Org. Reach</div></div><div class="pg-stat"><div class="v">'+fmt(flws)+'</div><div class="l">Follows</div></div><div class="pg-stat"><div class="v">'+fmtR(spd)+'</div><div class="l">Spend</div></div><div class="pg-stat"><div class="v">'+cnt+'</div><div class="l">Posts</div></div></div></div>';
+    }).join('') + '</div>' +
+    '<div class="cc"><div class="cc-hd"><div><div class="cc-ti">Main vs Offer — Organic Reach Comparison</div></div></div><div class="cw h220"><canvas id="pg-cmp"></canvas></div></div>';
+
+  setTimeout(function(){
+    var ML = MONTHS.filter(function(m){ return DB.metrics.some(function(r){ return r.month===m&&inRange(r.date,range.from,range.to); }); });
+    var mR = ML.map(function(m){ return sumF(DB.metrics.filter(function(r){ return r.month===m&&r.page==='Main'&&r.type==='Organic'; }),'reach')/1e6; });
+    var oR = ML.map(function(m){ return sumF(DB.metrics.filter(function(r){ return r.month===m&&r.page==='Offer'&&r.type==='Organic'; }),'reach')/1e6; });
+    mkC('pg-cmp',{type:'line',data:{labels:ML,datasets:[
+      {label:'Main',data:mR,borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,.06)',fill:true,tension:.3,pointRadius:3},
+      {label:'Offer',data:oR,borderColor:'#10b981',backgroundColor:'rgba(16,185,129,.04)',fill:true,tension:.3,pointRadius:3}
+    ]},options:Object.assign({},CX,{plugins:{legend:{labels:{color:'#94a3b8',font:{size:11},boxWidth:8}}},scales:{x:CX.scales.x,y:Object.assign({},CX.scales.y,{ticks:{color:'#4b5e75',font:{size:10},callback:function(v){return v+'M'}}})}})});
+  }, 0);
+}
+function openPageDet(id) {
+  var pgMap = {main:{name:'Main Instagram',db:'Main',icon:'📸'},offer:{name:'Offer Instagram',db:'Offer',icon:'📸'},yt:{name:'YouTube',db:'YouTube',icon:'▶'},custom:{name:'Custom IG',db:'Custom',icon:'📸'},gifts:{name:'Gifts IG',db:'Gifts',icon:'📸'},gmb:{name:'Google My Business',db:'GMB',icon:'📍'}};
+  var pg = pgMap[id]; if (!pg) return;
+  var range = getRange();
+  var mets = filteredMets(pg.db, null, range);
+  var posts = DB.posts.filter(function(p){ return p.page===pg.db; }).sort(function(a,b){ return b.views-a.views; });
+  var top = posts.filter(function(p){ return p.views>0; }).slice(0,8);
+  var ML = MONTHS.filter(function(m){ return mets.some(function(r){ return r.month===m; }); });
+  var box = document.getElementById('m-page-box');
+  box.innerHTML = '<div class="mh"><div><div class="mh-ti">'+pg.icon+' '+pg.name+'</div><div class="mh-si">Analytics · '+fmtDateShort(range.from)+' – '+fmtDateShort(range.to)+'</div></div><button class="mc" onclick="closeM(\'m-page\')">✕</button></div>' +
+    '<div class="mb">' +
+    '<div class="kg k4" style="margin-bottom:12px">' +
+    [['Total Views',fmt(sumF(mets,'views')),'#3b82f6'],['Total Reach',fmt(sumF(mets,'reach')),'#0ea5e9'],['Followers',fmt(sumF(mets,'follows')),'#10b981'],['Ad Spend',fmtR(sumF(mets.filter(function(r){return r.type==='Paid';}),'adsSpent')),'#f59e0b']]
+    .map(function(k){ return '<div class="kc" style="cursor:default"><div class="kc-l">'+k[0]+'</div><div class="kc-v" style="color:'+k[2]+'">'+k[1]+'</div></div>'; }).join('') + '</div>' +
+    '<div class="g2" style="margin-bottom:12px"><div class="cc" style="margin:0"><div class="cc-hd"><div class="cc-ti">Reach Trend</div></div><div class="cw h180"><canvas id="pd-reach"></canvas></div></div>' +
+    '<div class="cc" style="margin:0"><div class="cc-hd"><div class="cc-ti">Followers Gained</div></div><div class="cw h180"><canvas id="pd-follows"></canvas></div></div></div>' +
+    '<div class="slbl">Top Performing Content — click to play</div>' +
+    (top.length ? '<div class="c-grid">' + top.map(function(p){ return cCard(p); }).join('') + '</div>' : '<div style="color:var(--t3);font-size:12px;padding:10px 0">No posted content with metrics in this period.</div>') +
+    '<div class="slbl" style="margin-top:12px">All Content</div>' +
+    '<div style="overflow-x:auto"><table><thead><tr><th></th><th>SKU</th><th>Description</th><th>Creator</th><th>Post Date</th><th>Status</th><th>Views</th><th>Eng%</th><th>Link</th></tr></thead><tbody>' +
+    posts.map(function(p){ return '<tr style="cursor:pointer" onclick="openReel(\''+p.id+'\');closeM(\'m-page\')"><td>'+p.thumb+'</td><td class="mono">'+p.sku+'</td><td>'+p.desc+'</td><td>'+p.assignedTo+'</td><td>'+(p.postDate||'—')+'</td><td><span class="pill '+pillCls(p.status)+'">'+p.status+'</span></td><td>'+fmt(p.views)+'</td><td style="color:'+engColor(p.engRate)+'">'+(p.engRate?p.engRate+'%':'—')+'</td><td>'+(p.igUrl?'<a class="lnk" href="'+p.igUrl+'" target="_blank">↗</a>':'—')+'</td></tr>'; }).join('') +
+    '</tbody></table></div>' +
+    '<div style="margin-top:10px;padding:10px 12px;background:var(--s3);border-radius:var(--r);font-size:11.5px;color:var(--t3)">ℹ️ <strong style="color:var(--amber)">Live API:</strong> Connect this page in Settings to pull real-time metrics from the Instagram Graph API.</div>' +
+    '</div>';
+  setTimeout(function(){
+    var orgR = ML.map(function(m){ return sumF(DB.metrics.filter(function(r){ return r.month===m&&r.page===pg.db&&r.type==='Organic'; }),'reach')/1e6; });
+    var paidR = ML.map(function(m){ return sumF(DB.metrics.filter(function(r){ return r.month===m&&r.page===pg.db&&r.type==='Paid'; }),'reach')/1e6; });
+    mkC('pd-reach',{type:'bar',data:{labels:ML,datasets:[{label:'Organic',data:orgR,backgroundColor:'rgba(59,130,246,.5)',borderRadius:2},{label:'Paid',data:paidR,backgroundColor:'rgba(16,185,129,.4)',borderRadius:2}]},options:Object.assign({},CX,{plugins:CX.plugins,scales:{x:CX.scales.x,y:Object.assign({},CX.scales.y,{ticks:{color:'#4b5e75',font:{size:10},callback:function(v){return v+'M'}}})}})});
+    var flwD = ML.map(function(m){ return sumF(DB.metrics.filter(function(r){ return r.month===m&&r.page===pg.db; }),'follows'); });
+    mkC('pd-follows',{type:'line',data:{labels:ML,datasets:[{data:flwD,borderColor:'#10b981',backgroundColor:'rgba(16,185,129,.07)',fill:true,tension:.3,pointRadius:3}]},options:Object.assign({},CX,{plugins:CX.plugins})});
+  }, 50);
+  openM('m-page');
+}
+function cCard(p) {
+  return '<div class="c-card" onclick="openReel(\''+p.id+'\')">' +
+    '<div class="c-thumb"><span style="font-size:36px">'+p.thumb+'</span><div class="c-thumb-overlay"><div class="c-view">▶ '+fmt(p.views)+'</div></div></div>' +
+    '<div class="c-body"><div class="c-sku">'+p.sku+'</div><div class="c-desc">'+p.desc+'</div>' +
+    '<div class="c-row"><span>❤️ '+fmt(p.likes)+'</span><span>💬 '+p.comments+'</span><span style="color:'+engColor(p.engRate)+'">'+p.engRate+'%</span></div></div></div>';
+}
+
+// ═══════════════════════════════════════
+// ADVERTISEMENTS
+// ═══════════════════════════════════════
+var adsView = 'both';
+function renderAds() {
+  var el = document.getElementById('p-ads');
+  var range = getRange(), cmp = getCmpRange();
+  var paid = filteredMets('Main','Paid',range);
+  var ts = sumF(paid,'adsSpent'), tf = sumF(paid,'follows'), tr = sumF(paid,'reach');
+  var cpf = tf ? Math.round(ts/tf) : 0;
+  var cd1='',cd2='',cd3='',cd4='';
+  if (cmp) {
+    var cp = filteredMets('Main','Paid',cmp);
+    cd1=diffBadge(ts,sumF(cp,'adsSpent'),true); cd2=diffBadge(tf,sumF(cp,'follows'));
+    cd3=diffBadge(tr,sumF(cp,'reach')); cd4=diffBadge(cpf,sumF(cp,'follows')?Math.round(sumF(cp,'adsSpent')/sumF(cp,'follows')):0,true);
+  }
+  el.innerHTML = '<div class="kg k4">' +
+    [['Total Ad Spend',fmtR(ts),cd1,'#f59e0b'],['Paid Followers',fmt(tf),cd2,'#10b981'],['Paid Reach',fmt(tr),cd3,'#3b82f6'],['Cost / Follower','₹'+cpf,cd4,'#8b5cf6']]
+    .map(function(k){ return '<div class="kc" style="cursor:default"><div class="kc-l">'+k[0]+'</div><div class="kc-v" style="color:'+k[3]+'">'+k[1]+'</div><div class="kc-d">'+k[2]+'</div><div class="kc-stripe" style="background:'+k[3]+'"></div></div>'; }).join('') + '</div>' +
+    '<div class="g2" style="margin-bottom:12px"><div class="cc" style="margin:0"><div class="cc-hd"><div class="cc-ti">Spend vs Followers</div></div><div class="cw h200"><canvas id="ads-sf"></canvas></div></div><div class="cc" style="margin:0"><div class="cc-hd"><div class="cc-ti">Cost per Follower Trend</div></div><div class="cw h200"><canvas id="ads-cpf"></canvas></div></div></div>' +
+    '<div class="sh" style="margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px">' +
+    '<div class="slbl" style="margin:0">MIS Sheet</div>' +
+    '<div style="display:flex;gap:2px;background:var(--s2);border:1px solid var(--bdr);border-radius:6px;padding:2px">' +
+    ['Main','Offer','both'].map(function(v){ return '<button class="btn-sm" onclick="adsView=\''+v+'\';renderAds()" style="'+(adsView===v?'background:var(--blue-l);color:var(--blue);border-color:var(--blue)':'')+'">'+v+'</button>'; }).join('') + '</div></div>' +
+    '<div style="display:flex;gap:7px"><button class="btn-sm" onclick="openAddMonth()">+ Add Month</button><button class="btn-sm" onclick="exportAds()">⬇ Export CSV</button></div></div>' +
+    adsMISTable();
+
+  setTimeout(function(){
+    var ML = MONTHS.filter(function(m){ return DB.metrics.some(function(r){ return r.month===m&&inRange(r.date,range.from,range.to); }); });
+    var spd = ML.map(function(m){ return sumF(DB.metrics.filter(function(r){ return r.month===m&&r.page==='Main'&&r.type==='Paid'; }),'adsSpent')/1000; });
+    var flw = ML.map(function(m){ return sumF(DB.metrics.filter(function(r){ return r.month===m&&r.page==='Main'&&r.type==='Paid'; }),'follows'); });
+    mkC('ads-sf',{type:'bar',data:{labels:ML,datasets:[{label:'Spend (₹k)',data:spd,backgroundColor:'rgba(245,158,11,.5)',borderRadius:2,yAxisID:'y'},{label:'Followers',data:flw,type:'line',borderColor:'#10b981',backgroundColor:'transparent',pointRadius:3,tension:.3,yAxisID:'y2'}]},options:Object.assign({},CX,{plugins:CX.plugins,scales:{x:CX.scales.x,y:Object.assign({},CX.scales.y,{position:'left',ticks:{color:'#4b5e75',font:{size:10},callback:function(v){return '₹'+v+'k'}}}),y2:{position:'right',grid:{display:false},ticks:{color:'#10b981',font:{size:10}}}}})});
+    var cpfD = ML.map(function(m){ var s=sumF(DB.metrics.filter(function(r){ return r.month===m&&r.page==='Main'&&r.type==='Paid'; }),'adsSpent'); var f=sumF(DB.metrics.filter(function(r){ return r.month===m&&r.page==='Main'&&r.type==='Paid'; }),'follows'); return f?Math.round(s/f):0; });
+    mkC('ads-cpf',{type:'line',data:{labels:ML,datasets:[{data:cpfD,borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,.05)',fill:true,tension:.3,pointRadius:4,pointBackgroundColor:cpfD.map(function(v){ return v>40?'#ef4444':v>20?'#f59e0b':'#10b981'; })}]},options:Object.assign({},CX,{plugins:CX.plugins,scales:{x:CX.scales.x,y:Object.assign({},CX.scales.y,{ticks:{color:'#4b5e75',font:{size:10},callback:function(v){return '₹'+v}}})}})});
+  }, 0);
+}
+
+function adsMISTable() {
+  var allMonths = MONTHS.concat(FUTURE_MONTHS).filter(function(m){ return DB.metrics.some(function(r){ return r.month===m; }); });
+  var cols = ['views','reach','linkClicks','profileVisits','follows','unfollows','netFollowers','messages','adsSpent'];
+  var hdrs = ['Views','Reach','Clicks','Profile Visits','Follows','Unfollow','Net Followers','Msgs','Ads Spent'];
+  if (adsView === 'both') {
+    var rows = '';
+    allMonths.forEach(function(mo) {
+      ['Organic','Paid'].forEach(function(type) {
+        var mr = DB.metrics.find(function(r){ return r.page==='Main'&&r.month===mo&&r.type===type; }) || {};
+        var or = DB.metrics.find(function(r){ return r.page==='Offer'&&r.month===mo&&r.type===type; }) || {};
+        var mcpf = mr.adsSpent&&mr.follows ? '₹'+(mr.adsSpent/mr.follows).toFixed(1) : '—';
+        var ocpf = or.adsSpent&&or.follows ? '₹'+(or.adsSpent/or.follows).toFixed(1) : '—';
+        var tc = type==='Paid' ? 'color:#f59e0b;font-weight:700' : 'color:#10b981';
+        rows += '<tr style="'+(type==='Paid'?'background:rgba(245,158,11,.02)':'')+'"><td style="font-size:10.5px">'+mo+'</td><td style="'+tc+'">'+type+'</td>';
+        cols.forEach(function(f){ rows += '<td><input class="ci'+(f==='adsSpent'?' gold':'')+'" value="'+(mr[f]!=null?mr[f]:'')+'" onblur="saveAdsCell(\'Main\',\''+mo+'\',\''+type+'\',\''+f+'\',this.value)"></td>'; });
+        rows += '<td style="color:var(--amber);font-size:10.5px">'+mcpf+'</td><td style="background:var(--s1)"></td>';
+        cols.forEach(function(f){ rows += '<td><input class="ci'+(f==='adsSpent'?' gold':'')+'" value="'+(or[f]!=null?or[f]:'')+'" onblur="saveAdsCell(\'Offer\',\''+mo+'\',\''+type+'\',\''+f+'\',this.value)"></td>'; });
+        rows += '<td style="color:var(--amber);font-size:10.5px">'+ocpf+'</td></tr>';
+      });
+    });
+    return '<div style="overflow-x:auto"><table style="font-size:11px;min-width:1600px"><thead><tr><th rowspan="2">Month</th><th rowspan="2">Type</th>' +
+      '<th colspan="11" style="background:#1a1500;color:#f59e0b;text-align:center;border-left:2px solid #f59e0b">MAIN</th>' +
+      '<th colspan="11" style="background:#001510;color:#10b981;text-align:center;border-left:2px solid #10b981">OFFERS</th></tr><tr>' +
+      hdrs.map(function(h){ return '<th>'+h+'</th>'; }).join('') + '<th style="color:var(--amber)">C/F</th><th></th>' +
+      hdrs.map(function(h){ return '<th>'+h+'</th>'; }).join('') + '<th style="color:var(--amber)">C/F</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+  }
+  var page = adsView;
+  var rows2 = '';
+  allMonths.forEach(function(mo) {
+    ['Organic','Paid'].forEach(function(type) {
+      var r = DB.metrics.find(function(x){ return x.page===page&&x.month===mo&&x.type===type; }) || {};
+      var cpf = r.adsSpent&&r.follows ? '₹'+(r.adsSpent/r.follows).toFixed(2) : '—';
+      var tc = type==='Paid' ? 'color:#f59e0b;font-weight:700' : 'color:#10b981';
+      rows2 += '<tr style="'+(type==='Paid'?'background:rgba(245,158,11,.02)':'')+'"><td>'+mo+'</td><td style="'+tc+'">'+type+'</td>';
+      cols.forEach(function(f){ rows2 += '<td><input class="ci'+(f==='adsSpent'?' gold':'')+'" value="'+(r[f]!=null?r[f]:'')+'" onblur="saveAdsCell(\''+page+'\',\''+mo+'\',\''+type+'\',\''+f+'\',this.value)"></td>'; });
+      rows2 += '<td style="color:var(--amber);font-weight:600">'+cpf+'</td></tr>';
+    });
+  });
+  return '<div class="tc"><div style="overflow-x:auto"><table><thead><tr><th>Month</th><th>Type</th>'+hdrs.map(function(h){ return '<th>'+h+'</th>'; }).join('')+'<th style="color:var(--amber)">C/Follower</th></tr></thead><tbody>'+rows2+'</tbody></table></div></div>';
+}
+
+function saveAdsCell(page, month, type, field, val) {
+  var n = parseFloat(val.replace(/[₹,LKCr]/g, ''));
+  var row = DB.metrics.find(function(r){ return r.page===page && r.month===month && r.type===type; });
+  if (!row) {
+    row = {page:page,month:month,date:month+' 01',type:type,views:0,reach:0,linkClicks:0,profileVisits:0,follows:0,unfollows:0,netFollowers:0,messages:0,adsSpent:0};
+    DB.metrics.push(row);
+  }
+  if (!isNaN(n)) row[field] = n;
+  STATE.saveMetricCell(page, month, type, field, n);
+}
+function openAddMonth() {
+  document.getElementById('m-data-body').innerHTML = '<div class="fr2"><div class="fg"><label>Month</label><select id="am-mo"><option>Mar 2026</option><option>Apr 2026</option><option>May 2026</option><option>Jun 2026</option><option>Jul 2026</option><option>Aug 2026</option><option>Sep 2026</option><option>Oct 2026</option><option>Nov 2026</option><option>Dec 2026</option></select></div><div class="fg"><label>Page</label><select id="am-pg"><option>Main</option><option>Offer</option><option>Custom</option><option>Gifts</option></select></div></div>' +
+    '<div class="fr2"><div class="fg"><label>Organic Reach</label><input id="am-or" type="number" placeholder="0"></div><div class="fg"><label>Paid Reach</label><input id="am-pr" type="number" placeholder="0"></div></div>' +
+    '<div class="fr3"><div class="fg"><label>Profile Visits</label><input id="am-pv" type="number" placeholder="0"></div><div class="fg"><label>Paid Followers</label><input id="am-fo" type="number" placeholder="0"></div><div class="fg"><label>Ad Spend ₹</label><input id="am-sp" type="number" placeholder="0"></div></div>' +
+    '<div class="fr2"><div class="fg"><label>Org Views</label><input id="am-ov" type="number" placeholder="0"></div><div class="fg"><label>Paid Views</label><input id="am-pv2" type="number" placeholder="0"></div></div>' +
+    '<div class="fr2"><div class="fg"><label>Org Follows</label><input id="am-of" type="number" placeholder="0"></div><div class="fg"><label>Org Unfollows</label><input id="am-ou" type="number" placeholder="0"></div></div>' +
+    '<div style="display:flex;gap:8px;justify-content:flex-end;padding-top:12px"><button class="btn-sm" onclick="closeM(\'m-data\')">Cancel</button><button class="btn-pri" onclick="doAddMonth()">Add Month →</button></div>';
+  openM('m-data');
+}
+function doAddMonth() {
+  var mo      = document.getElementById('am-mo').value;
+  var pg      = document.getElementById('am-pg').value;
+  var months  = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var mIdx    = months.indexOf(mo.split(' ')[0]) + 1;
+  var yr      = mo.split(' ')[1] || new Date().getFullYear();
+  var dateStr = yr + '-' + String(mIdx).padStart(2,'0') + '-01';
+  var rows = [
+    {page:pg,month:mo,date:dateStr,type:'Organic',views:+(document.getElementById('am-ov').value)||0,reach:+(document.getElementById('am-or').value)||0,linkClicks:0,profileVisits:+(document.getElementById('am-pv').value)||0,follows:+(document.getElementById('am-of').value)||0,unfollows:+(document.getElementById('am-ou').value)||0,netFollowers:0,messages:0,adsSpent:0},
+    {page:pg,month:mo,date:dateStr,type:'Paid',views:+(document.getElementById('am-pv2').value)||0,reach:+(document.getElementById('am-pr').value)||0,linkClicks:0,profileVisits:+(document.getElementById('am-pv').value)||0,follows:+(document.getElementById('am-fo').value)||0,unfollows:0,netFollowers:0,messages:0,adsSpent:+(document.getElementById('am-sp').value)||0},
+  ];
+  STATE.addMonth(rows)
+    .then(function(){ if (FUTURE_MONTHS.indexOf(mo) < 0) FUTURE_MONTHS.push(mo); closeM('m-data'); renderAds(); })
+    .catch(function(err){ alert('Save failed: ' + err.message); });
+}
+function exportAds() {
+  var hdr = 'Month,Type,Views,Reach,LinkClicks,ProfileVisits,Follows,Unfollows,NetFollowers,Messages,AdsSpent,CostPerFollower';
+  var rows = DB.metrics.filter(function(r){ return adsView==='both'||(r.page===adsView); }).map(function(r){ return [r.month,r.type,r.views,r.reach,r.linkClicks,r.profileVisits,r.follows,r.unfollows,r.netFollowers,r.messages,r.adsSpent,r.adsSpent&&r.follows?(r.adsSpent/r.follows).toFixed(2):''].join(','); });
+  var csv = [hdr].concat(rows).join('\n');
+  var a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv); a.download = 'KOC_Ads.csv'; a.click();
+}
+
+// ═══════════════════════════════════════
+// AI CONTENT LAB
+// ═══════════════════════════════════════
+var aiTool = 'ideas';
+var AI_TOOLS = [
+  {id:'ideas',ic:'💡',nm:'Reel Ideas',sub:'5 creative concepts'},
+  {id:'hooks',ic:'🎯',nm:'Hook Lines',sub:'Scroll-stopping openers'},
+  {id:'captions',ic:'✍️',nm:'Captions',sub:'3 tone variations'},
+  {id:'scripts',ic:'📋',nm:'Reel Scripts',sub:'Full 60-sec scripts'},
+  {id:'hashtags',ic:'#️⃣',nm:'Hashtags',sub:'Targeted tag sets'},
+  {id:'competitor',ic:'🔍',nm:'Competitor',sub:'Analyze & benchmark'},
+  {id:'trends',ic:'📈',nm:'Trends',sub:'Trending formats'},
+  {id:'strategy',ic:'🗓️',nm:'Content Calendar',sub:'Weekly content plan'}
+];
+var AI_SYS = {
+  ideas:'You are a social media content strategist for King of Cards, a premium greeting cards & gifts brand in Bangalore, India. Generate 5 creative, culturally relevant Instagram Reel ideas. For each: title, concept, visual style, hook line, expected engagement type. Number them 1-5.',
+  hooks:'You are a copywriter for Indian Instagram brands. Generate 5 scroll-stopping first-3-second hook lines for reels. Be punchy, culturally resonant. Number them 1-5.',
+  captions:'You are a social media copywriter for King of Cards. Write 3 Instagram captions: 1) Casual & Friendly 2) Premium & Aspirational 3) Festive & Emotional. Each under 80 words with 5 hashtags.',
+  scripts:'You are a reel script writer for King of Cards. Write a complete 60-second Instagram Reel script with: HOOK (0-3s), BUILD (3-45s), CTA (45-60s). Include visual direction notes in [brackets].',
+  hashtags:'You are a hashtag strategist for Indian Instagram brands. Generate 30 hashtags in 3 groups: Niche (10), Mid-tier (10), Broad (10). Include Hindi/regional tags where relevant.',
+  competitor:'You are a social media analyst. Analyze content patterns, hook styles, and engagement tactics. Provide actionable insights for King of Cards to differentiate.',
+  trends:'You are a trend analyst for Instagram Reels in the Indian gifting space. Identify trending formats, hooks, and content structures. Be specific and actionable.',
+  strategy:'You are a content calendar strategist for King of Cards. Create a weekly content plan as a clear table: Day | Reel Type | Hook Idea | Caption Tone | Best Post Time (IST).'
+};
+var AI_PH = {
+  ideas:'e.g. Diwali gifting, premium cards under ₹500…',hooks:'e.g. New laser-cut launch, youthful tone…',captions:'e.g. Personalized anniversary card…',scripts:'e.g. Pink box gifting reel, 60 sec emotional…',hashtags:'e.g. Premium wedding cards, Bangalore, couples 25-35…',competitor:'e.g. Analyze @archies or gifting brands in India…',trends:'e.g. What reel formats are trending for gifting brands?',strategy:'e.g. March 2026, Holi follow-up, push premium range…'
+};
+var AI_QP = {
+  ideas:['5 ideas for Holi cards','Emotional gifting reel ideas','Unique unboxing concepts','Store walk-through ideas','Making process reel ideas'],
+  hooks:['Hook for luxury card launch','Surprise gift reveal','\'Never seen before\' opener','Festival countdown hook','POV: gifting done right'],
+  captions:['Birthday card — premium','Anniversary card — emotional','Office gift — casual','Festival offer — festive','Custom card — storytelling'],
+  scripts:['60-sec Diwali card reel','Behind the scenes making','Gifting guide voiceover','Couple anniversary reveal','New collection launch'],
+  hashtags:['Premium wedding cards','Diwali gift India','Bangalore gift shop','Personalized cards 2026','Anniversary gifting'],
+  competitor:['Compare vs Archies India','Analyze @hallmark India','Top performing gift card reels','Gifting brand content gaps','What competitors do differently'],
+  trends:['Trending formats March 2026','POV reel trend analysis','Unboxing trends gifting','Voiceover vs text overlay','Carousel vs Reels performance'],
+  strategy:['March 2026 content plan','Ramadan Eid calendar','Festival season Q2 strategy','10 reels in 30 days','Summer wedding content']
+};
+function renderContent() {
+  var el = document.getElementById('p-content');
+  var tool = AI_TOOLS.find(function(t){ return t.id===aiTool; }) || AI_TOOLS[0];
+  var hist = DB.aiHistory[aiTool] || [];
+  el.innerHTML = '<div class="ai-lab"><div class="ai-lab-hd"><div class="ai-pulse"></div>' +
+    '<div><div style="font-size:14px;font-weight:800">AI Content Lab</div><div style="font-size:11px;color:var(--t3);margin-top:1px">Powered by Claude AI · Ideas · Scripts · Hooks · Captions · Strategy</div></div>' +
+    '<div style="margin-left:auto;display:flex;gap:6px"><span class="tag tag-p">✦ Claude Sonnet</span><span class="tag tag-b">King of Cards</span></div></div>' +
+    '<div class="ai-lab-body"><div class="slbl">Choose AI Tool</div>' +
+    '<div class="ai-tools">' + AI_TOOLS.map(function(t){ return '<div class="ai-tool'+(aiTool===t.id?' on':'')+'" onclick="aiTool=\''+t.id+'\';renderContent()"><div class="ai-tool-ic">'+t.ic+'</div><div class="ai-tool-nm">'+t.nm+'</div><div class="ai-tool-sub">'+t.sub+'</div></div>'; }).join('') + '</div>' +
+    '<div class="ai-ws"><div class="ai-ws-hd"><div style="display:flex;align-items:center;gap:7px"><div class="ai-pulse"></div><span style="font-size:12px;font-weight:700">'+tool.nm+' Workspace</span></div>' +
+    '<div style="display:flex;gap:6px"><button class="btn-sm" onclick="DB.aiHistory[aiTool]=[];renderContent()">Clear</button></div></div>' +
+    '<div class="ai-ws-body" id="ai-chat">' +
+    '<div class="ai-msg ai-msg-a"><div class="ai-bbl">' + aiWelcome(aiTool) + '</div></div>' +
+    hist.map(function(m){ return '<div class="ai-msg '+(m.role==='user'?'ai-msg-u':'ai-msg-a')+'"><div class="ai-bbl">'+m.content+'</div></div>'; }).join('') +
+    '</div><div class="ai-ws-inp"><textarea class="ai-textarea" id="ai-in" placeholder="'+AI_PH[aiTool]+'" rows="1" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();sendAI();}"></textarea>' +
+    '<button class="btn-pri" onclick="sendAI()" style="flex-shrink:0">Send ↗</button></div></div>' +
+    '<div style="height:1px;background:var(--bdr);margin:14px 0"></div><div class="slbl">Quick Prompts</div>' +
+    '<div style="display:flex;flex-wrap:wrap;gap:6px">' + (AI_QP[aiTool]||[]).map(function(q){ return '<button class="qchip" onclick="document.getElementById(\'ai-in\').value=this.textContent;sendAI()">'+q+'</button>'; }).join('') + '</div>' +
+    '</div></div>';
+}
+function aiWelcome(t) {
+  var w = {ideas:'👋 I\'m your content strategist. Tell me what kind of reel you\'re planning and I\'ll generate 5 creative ideas tailored for King of Cards.',hooks:'🎯 Hook lines are the first 3 seconds of your reel. Share the product or theme and I\'ll write 5 scroll-stopping openers.',captions:'✍️ Tell me the post topic and I\'ll write 3 variations: Casual, Premium, and Festive — each with hashtags.',scripts:'📋 Give me the product name and mood and I\'ll write a full 60-second reel script with hook, build, and CTA.',hashtags:'#️⃣ Tell me your post topic, target city, and audience — I\'ll generate a high-performance hashtag set of 30 tags.',competitor:'🔍 Share a competitor handle or niche and I\'ll analyze content patterns and suggest how to differentiate.',trends:'📈 I\'ll identify what reel structures are working in the Indian greeting card and gifting space right now.',strategy:'🗓️ Tell me your goal for the month and I\'ll plan a weekly content calendar with dates, types, and captions.'};
+  return w[t] || 'Hello! Tell me what you\'d like to create.';
+}
+async function sendAI() {
+  var input = document.getElementById('ai-in');
+  var msg = input.value.trim(); if (!msg) return;
+  input.value = '';
+  if (!DB.aiHistory[aiTool]) DB.aiHistory[aiTool] = [];
+  DB.aiHistory[aiTool].push({role:'user',content:msg});
+  var chat = document.getElementById('ai-chat');
+  chat.innerHTML += '<div class="ai-msg ai-msg-u"><div class="ai-bbl">'+msg+'</div></div>';
+  chat.innerHTML += '<div class="ai-msg ai-msg-a" id="ai-typ"><div class="ai-typing"><span></span><span></span><span></span></div></div>';
+  chat.scrollTop = chat.scrollHeight;
+  var ctx = 'Context: King of Cards — premium greeting cards & gifts, Bangalore, India. Pages: @kingofcards.in (Main), @kingofcards.offers (Offers). Audience: Indian middle/upper-middle class, age 20-45, gifting occasions. Top content: laser-cut cards, making videos, store showcases.';
+  try {
+    var msgs = DB.aiHistory[aiTool].slice(-10).map(function(m){ return {role:m.role,content:m.content}; });
+    var res = await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,system:AI_SYS[aiTool]+'\n\n'+ctx,messages:msgs})});
+    var data = await res.json();
+    var reply = (data.content&&data.content[0]&&data.content[0].text) || 'No response. Check API connection in Settings.';
+    var typEl = document.getElementById('ai-typ'); if (typEl) typEl.remove();
+    DB.aiHistory[aiTool].push({role:'assistant',content:reply});
+    chat.innerHTML += '<div class="ai-msg ai-msg-a"><div class="ai-bbl">'+reply+'</div></div>';
+  } catch(e) {
+    var typEl2 = document.getElementById('ai-typ'); if (typEl2) typEl2.remove();
+    var err = '⚠️ API Error: '+e.message+'\n\nTo enable Claude AI, connect in Settings → Claude AI → Connect.';
+    DB.aiHistory[aiTool].push({role:'assistant',content:err});
+    chat.innerHTML += '<div class="ai-msg ai-msg-a"><div class="ai-bbl" style="border-color:var(--red)">'+err+'</div></div>';
+  }
+  chat.scrollTop = chat.scrollHeight;
+}
+
+// ═══════════════════════════════════════
+// PRODUCTION — with checkboxes + delete
+// ═══════════════════════════════════════
+var PF = { search:'', page:'', status:'', person:'' };
+var prodSel = {};
+function renderProduction() {
+  var el = document.getElementById('p-production');
+  var colors = {Planned:'#94a3b8',Shooting:'#8b5cf6',Edited:'#f59e0b',Scheduled:'#3b82f6',Posted:'#10b981'};
+  var counts = {Planned:0,Shooting:0,Edited:0,Scheduled:0,Posted:0};
+  DB.posts.forEach(function(p){ if (counts[p.status]!==undefined) counts[p.status]++; });
+  el.innerHTML = '<div class="kg k5" style="margin-bottom:12px">' +
+    Object.keys(colors).map(function(s){ return '<div class="kc" style="cursor:default"><div class="kc-l">'+s+'</div><div class="kc-v" style="color:'+colors[s]+';font-size:24px">'+counts[s]+'</div><div class="kc-stripe" style="background:'+colors[s]+'"></div></div>'; }).join('') + '</div>' +
+    '<div class="tc"><div class="tb"><div class="tb-ttl">Production Sheet</div>' +
+    '<div class="flt"><input class="fi" placeholder="Search SKU…" oninput="PF.search=this.value;rebuildProd()" style="width:120px">' +
+    '<select class="fi" onchange="PF.page=this.value;rebuildProd()"><option value="">All Pages</option>'+['Main','Offer','Custom','Gifts','YouTube'].map(function(p){ return '<option>'+p+'</option>'; }).join('')+'</select>' +
+    '<select class="fi" onchange="PF.status=this.value;rebuildProd()"><option value="">All Status</option>'+['Posted','Scheduled','Edited','Shooting','Planned','Repost'].map(function(s){ return '<option>'+s+'</option>'; }).join('')+'</select>' +
+    '<select class="fi" onchange="PF.person=this.value;rebuildProd()"><option value="">All Members</option>'+DB.people.map(function(p){ return '<option>'+p.name+'</option>'; }).join('')+'</select>' +
+    '</div><div id="bulk-wrap" style="display:none;gap:7px;align-items:center">' +
+    '<span id="sel-cnt" style="font-size:11px;color:var(--t3)">0</span><button class="btn-danger" onclick="bulkDel()">🗑 Delete Selected</button></div>' +
+    '<button class="btn-pri" onclick="openAddPost()">+ Add</button></div>' +
+    '<div style="overflow-x:auto"><table><thead><tr><th><input type="checkbox" id="sel-all" onchange="selectAll(this.checked)"></th>' +
+    '<th>#</th><th>Page</th><th>SKU</th><th>Shoot Type</th><th>Shoot Date</th><th>Edited Date</th><th>Post Date</th><th>Assigned To</th><th>Status</th><th>IG Link</th><th>Work File</th><th>Remarks</th><th>Del</th>' +
+    '</tr></thead><tbody id="prod-tbody"></tbody></table></div></div>';
+  prodSel = {};
+  rebuildProd();
+}
+function rebuildProd() {
+  var STS = ['Posted','Scheduled','Edited','Shooting','Planned','Repost'];
+  var STY = ['Store','Studio','Making','Content','Carousel','Outdoor','Influencer','Concept','Customized Card'];
+  var rows = DB.posts.filter(function(p) {
+    return (!PF.search || (p.sku+p.desc).toLowerCase().indexOf(PF.search.toLowerCase())>=0) &&
+      (!PF.page   || p.page===PF.page) &&
+      (!PF.status || p.status===PF.status) &&
+      (!PF.person || p.assignedTo===PF.person);
+  });
+  var tb = document.getElementById('prod-tbody'); if (!tb) return;
+  tb.innerHTML = rows.map(function(p,i) {
+    var chk = prodSel[p.id] ? 'checked' : '';
+    return '<tr id="pr-'+p.id+'">' +
+      '<td><input type="checkbox" '+chk+' onchange="toggleSel(\''+p.id+'\',this.checked)"></td>' +
+      '<td style="color:var(--t3)">'+String(i+1)+'</td>' +
+      '<td><select class="fi" style="padding:2px 6px;font-size:10.5px" onchange="saveP(\''+p.id+'\',\'page\',this.value)">'+['Main','Offer','Custom','Gifts','YouTube'].map(function(v){ return '<option'+(p.page===v?' selected':'')+'>'+v+'</option>'; }).join('')+'</select></td>' +
+      '<td class="ed mono" contenteditable="true" onblur="saveP(\''+p.id+'\',\'sku\',this.textContent)">'+p.sku+'</td>' +
+      '<td><select class="fi" style="padding:2px 6px;font-size:10.5px" onchange="saveP(\''+p.id+'\',\'shootType\',this.value)">'+STY.map(function(s){ return '<option'+(p.shootType===s?' selected':'')+'>'+s+'</option>'; }).join('')+'</select></td>' +
+      '<td class="ed" contenteditable="true" onblur="saveP(\''+p.id+'\',\'shootDate\',this.textContent)">'+(p.shootDate||'—')+'</td>' +
+      '<td class="ed" contenteditable="true" onblur="saveP(\''+p.id+'\',\'editedDate\',this.textContent)">'+(p.editedDate||'—')+'</td>' +
+      '<td class="ed" contenteditable="true" onblur="saveP(\''+p.id+'\',\'postDate\',this.textContent)">'+(p.postDate||'—')+'</td>' +
+      '<td><select class="fi" style="padding:2px 6px;font-size:10.5px" onchange="saveP(\''+p.id+'\',\'assignedTo\',this.value)">'+DB.people.map(function(x){ return '<option'+(p.assignedTo===x.name?' selected':'')+'>'+x.name+'</option>'; }).join('')+'</select></td>' +
+      '<td><select class="fi" style="padding:2px 6px;font-size:10.5px" onchange="saveP(\''+p.id+'\',\'status\',this.value)">'+STS.map(function(s){ return '<option'+(p.status===s?' selected':'')+'>'+s+'</option>'; }).join('')+'</select></td>' +
+      '<td>'+(p.igUrl?'<a class="lnk" href="'+p.igUrl+'" target="_blank">↗</a> <button class="btn-sm" style="padding:2px 7px;font-size:10px" onclick="openReel(\''+p.id+'\')">▶</button>':'<span style="color:var(--t3)">—</span>')+'</td>' +
+      '<td class="ed" contenteditable="true" onblur="saveP(\''+p.id+'\',\'workFile\',this.textContent)" style="font-size:10.5px;color:var(--blue)">'+(p.workFile||'Add link…')+'</td>' +
+      '<td class="ed" contenteditable="true" onblur="saveP(\''+p.id+'\',\'remarks\',this.textContent)">'+(p.remarks||'—')+'</td>' +
+      '<td><button class="btn-sm" onclick="delRow(\''+p.id+'\')" style="padding:2px 7px;font-size:10px;color:var(--red)">🗑</button></td>' +
+      '</tr>';
+  }).join('');
+}
+function toggleSel(id, checked) {
+  if (checked) prodSel[id] = true; else delete prodSel[id];
+  var cnt = Object.keys(prodSel).length;
+  var w = document.getElementById('bulk-wrap');
+  var c = document.getElementById('sel-cnt');
+  if (cnt > 0) { w.style.display='flex'; c.textContent=cnt+' selected'; }
+  else { w.style.display='none'; }
+}
+function selectAll(checked) {
+  document.querySelectorAll('#prod-tbody input[type=checkbox]').forEach(function(cb) {
+    cb.checked = checked;
+    var id = cb.closest('tr').id.replace('pr-','');
+    if (checked) prodSel[id] = true; else delete prodSel[id];
+  });
+  var cnt = Object.keys(prodSel).length;
+  var w = document.getElementById('bulk-wrap');
+  var c = document.getElementById('sel-cnt');
+  if (cnt > 0) { w.style.display='flex'; c.textContent=cnt+' selected'; }
+  else { w.style.display='none'; }
+}
+function delRow(id) {
+  if (!confirm('Delete this row?')) return;
+  var p = DB.posts.find(function(x){ return x.id===id || x._id===id; });
+  if (p) DB.deleteLog.push({id:id,sku:p.sku,page:p.page,deletedAt:new Date().toISOString(),deletedBy:DB.user ? DB.user.name : 'Unknown'});
+  delete prodSel[id];
+  STATE.removePost(id)
+    .then(function(){ rebuildProd(); })
+    .catch(function(err){ alert('Delete failed: ' + err.message); STATE.loadPosts().then(rebuildProd); });
+}
+function bulkDel() {
+  var ids = Object.keys(prodSel);
+  if (!ids.length) return;
+  if (!confirm('Delete '+ids.length+' rows?')) return;
+  STATE.bulkRemovePosts(ids)
+    .then(function(){ prodSel={}; rebuildProd(); document.getElementById('bulk-wrap').style.display='none'; })
+    .catch(function(err){ alert('Bulk delete failed: ' + err.message); });
+}
+function saveP(id, field, val) {
+  var p = DB.posts.find(function(x){ return x.id===id || x._id===id; });
+  if (p) p[field] = typeof val === 'string' ? val.trim() : val;
+  STATE.savePost(id, field, typeof val === 'string' ? val.trim() : val)
+    .catch(function(err){ console.error('saveP failed:', err); });
+}
+
+// ═══════════════════════════════════════
+// PEOPLE
+// ═══════════════════════════════════════
+function renderPeople() {
+  var el = document.getElementById('p-people');
+  var range = getRange(), cmp = getCmpRange();
+  var fp = filteredPosts(range);
+  var maxOut = Math.max.apply(null, DB.people.map(function(p){ return p.reels+p.edits; }).concat([1]));
+
+  el.innerHTML = '<div class="sh"><div class="slbl" style="margin:0">Team Performance · '+fmtDateShort(range.from)+' – '+fmtDateShort(range.to)+'</div>' +
+    '<button class="btn-pri" onclick="buildMemberForm();openM(\'m-member\')">+ Add Member</button></div>' +
+    '<div class="kg k4" style="margin-bottom:12px">' +
+    [['Team Members',DB.people.length,'#3b82f6'],['Top Producer','Dwarika','#10b981'],['Posted in Period',fp.filter(function(p){ return p.status==='Posted'; }).length,'#8b5cf6'],['Avg Score',Math.round(DB.people.reduce(function(a,p){ return a+p.score; },0)/DB.people.length)+'%','#f59e0b']]
+    .map(function(k){ return '<div class="kc" style="cursor:default"><div class="kc-l">'+k[0]+'</div><div class="kc-v" style="color:'+k[2]+'">'+k[1]+'</div></div>'; }).join('') + '</div>' +
+    '<div class="g12"><div>' +
+    '<div class="slbl">Workload by Member</div>' +
+    DB.people.filter(function(p){ return p.reels+p.edits > 0; }).sort(function(a,b){ return (b.reels+b.edits)-(a.reels+a.edits); }).map(function(p) {
+      var myInPeriod = fp.filter(function(c){ return c.assignedTo===p.name&&c.status==='Posted'; }).length;
+      return '<div class="p-card" onclick="openPerson(\''+(p._id||p.id)+'\')"><div class="av" style="width:32px;height:32px;background:'+p.color+'22;color:'+p.color+'">'+p.initials+'</div>' +
+        '<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:700">'+p.name+'</div><div style="font-size:10px;color:var(--t3)">'+p.role+' · '+String(myInPeriod)+' posts in period</div></div>' +
+        '<div class="pb"><div class="pb-fill" style="width:'+Math.round((p.reels+p.edits)/maxOut*100)+'%;background:'+p.color+'"></div></div>' +
+        '<div style="font-size:12px;font-weight:700;width:54px;text-align:right;color:'+p.color+'">'+String(p.reels+p.edits)+'</div></div>';
+    }).join('') + '</div>' +
+    '<div class="cc" style="margin:0"><div class="cc-hd"><div class="cc-ti">Output Breakdown</div></div><div class="cw h300"><canvas id="ppl-chart"></canvas></div></div></div>' +
+    '<div class="tc"><div class="tb"><div class="tb-ttl">All Members</div></div>' +
+    '<table><thead><tr><th>Name</th><th>Role</th><th>Team</th><th>Reels</th><th>Edits</th><th>Posts in Period</th><th>Reach in Period</th><th>Productivity</th><th>Actions</th></tr></thead><tbody>' +
+    DB.people.map(function(p) {
+      var myPosts = fp.filter(function(c){ return c.assignedTo===p.name&&c.status==='Posted'; });
+      var totReach = myPosts.reduce(function(a,c){ return a+c.reach; },0);
+      var pillC = p.role==='Admin'?'p-posted':p.role==='Editor'?'p-scheduled':'p-planned';
+      return '<tr><td style="cursor:pointer" onclick="openPerson(\''+(p._id||p.id)+'\')"><div style="display:flex;align-items:center;gap:8px"><div class="av" style="width:24px;height:24px;font-size:8px;background:'+p.color+'22;color:'+p.color+'">'+p.initials+'</div>'+p.name+'</div></td>' +
+        '<td><span class="pill '+pillC+'">'+p.role+'</span></td><td style="color:var(--t3)">'+p.team+'</td>' +
+        '<td style="font-weight:700">'+String(p.reels)+'</td><td>'+String(p.edits)+'</td>' +
+        '<td style="color:'+(myPosts.length>0?'#34d399':'#94a3b8')+';font-weight:'+(myPosts.length>0?'700':'400')+'">'+String(myPosts.length)+'</td>' +
+        '<td>'+fmt(totReach)+'</td>' +
+        '<td><div style="display:flex;align-items:center;gap:6px"><div style="width:70px;height:3px;background:var(--s4);border-radius:2px"><div style="width:'+p.score+'%;height:100%;border-radius:2px;background:'+(p.score>85?'#10b981':p.score>70?'#f59e0b':'#ef4444')+'"></div></div><span style="font-size:10.5px">'+p.score+'%</span></div></td>' +
+        '<td style="display:flex;gap:5px"><button class="btn-sm" style="font-size:10px;padding:2px 8px" onclick="editPerson(\''+(p._id||p.id)+'\')">Edit</button><button class="btn-sm" style="font-size:10px;color:var(--red);padding:2px 8px" onclick="delPerson(\''+(p._id||p.id)+'\')">Remove</button></td></tr>';
+    }).join('') + '</tbody></table></div>';
+
+  setTimeout(function(){
+    var top = DB.people.filter(function(p){ return p.reels+p.edits>0; }).sort(function(a,b){ return (b.reels+b.edits)-(a.reels+a.edits); }).slice(0,9);
+    mkC('ppl-chart',{type:'bar',data:{labels:top.map(function(p){ return p.name.split(' ')[0]; }),datasets:[{label:'Reels',data:top.map(function(p){ return p.reels; }),backgroundColor:top.map(function(p){ return p.color+'bb'; }),borderRadius:3},{label:'Edits',data:top.map(function(p){ return p.edits; }),backgroundColor:top.map(function(p){ return p.color+'44'; }),borderRadius:3}]},options:Object.assign({},CX,{plugins:{legend:{labels:{color:'#94a3b8',font:{size:10},boxWidth:8}}},scales:{x:CX.scales.x,y:CX.scales.y}})});
+  }, 0);
+}
+function openPerson(id) {
+  var p = DB.people.find(function(x){ return (x._id||x.id)===id; }); if (!p) return;
+  var pid = p._id || p.id;
+  var range = getRange();
+  var myPosts = DB.posts.filter(function(c){ return c.assignedTo===p.name; });
+  var inPeriod = filteredPosts(range).filter(function(c){ return c.assignedTo===p.name&&c.status==='Posted'; });
+  var topPost = myPosts.filter(function(c){ return c.views>0; }).sort(function(a,b){ return b.views-a.views; })[0];
+  var totReach = inPeriod.reduce(function(a,c){ return a+c.reach; },0);
+  var box = document.getElementById('m-person-box');
+  box.innerHTML = '<div class="mh"><div style="display:flex;align-items:center;gap:12px"><div class="av" style="width:46px;height:46px;font-size:15px;background:'+p.color+'22;color:'+p.color+'">'+p.initials+'</div><div><div class="mh-ti">'+p.name+'</div><div class="mh-si">'+p.role+' · '+p.team+' · '+(p.email||'')+'</div></div></div>' +
+    '<div style="display:flex;gap:6px"><button class="btn-sm" onclick="editPerson(\''+pid+'\');closeM(\'m-person\')">✏️ Edit</button><button class="mc" onclick="closeM(\'m-person\')">✕</button></div></div>' +
+    '<div class="mb"><div class="kg k4" style="margin-bottom:12px">' +
+    [['Reels (Total)',String(p.reels),p.color],['Posted in Period',String(inPeriod.length),'#3b82f6'],['Reach in Period',fmt(totReach),'#0ea5e9'],['Productivity',p.score+'%',p.score>85?'#10b981':p.score>70?'#f59e0b':'#ef4444']]
+    .map(function(k){ return '<div class="kc" style="cursor:default"><div class="kc-l">'+k[0]+'</div><div class="kc-v" style="color:'+k[2]+';font-size:18px">'+k[1]+'</div></div>'; }).join('') + '</div>' +
+    (topPost ? '<div class="slbl">Best Performing Post</div><div style="background:var(--s3);border-radius:var(--r);padding:10px 12px;margin-bottom:12px;cursor:pointer;display:flex;align-items:center;gap:11px" onclick="openReel(\''+(topPost._id||topPost.id)+'\');closeM(\'m-person\')"><div style="font-size:28px">'+topPost.thumb+'</div><div><div class="mono" style="color:var(--blue);font-size:10px">'+topPost.sku+'</div><div style="font-size:12px;font-weight:600">'+topPost.desc+'</div><div style="font-size:11px;color:var(--t3);margin-top:3px">'+fmt(topPost.views)+' views · '+fmt(topPost.likes)+' likes · '+topPost.engRate+'% eng.</div></div></div>' : '') +
+    '<div class="slbl">All Assigned Content ('+myPosts.length+')</div>' +
+    '<div style="overflow-x:auto"><table><thead><tr><th></th><th>SKU</th><th>Page</th><th>Description</th><th>Status</th><th>Views</th><th>Eng%</th></tr></thead><tbody>' +
+    myPosts.map(function(c){ return '<tr style="cursor:pointer" onclick="openReel(\''+(c._id||c.id)+'\');closeM(\'m-person\')"><td>'+c.thumb+'</td><td class="mono">'+c.sku+'</td><td>'+c.page+'</td><td>'+c.desc+'</td><td><span class="pill '+pillCls(c.status)+'">'+c.status+'</span></td><td>'+fmt(c.views)+'</td><td style="color:'+engColor(c.engRate)+'">'+(c.engRate?c.engRate+'%':'—')+'</td></tr>'; }).join('') +
+    '</tbody></table></div></div>';
+  openM('m-person');
+}
+function delPerson(id) {
+  if (!confirm('Remove this team member?')) return;
+  STATE.removeUser(id)
+    .then(function(){ renderPeople(); })
+    .catch(function(err){ alert('Remove failed: ' + err.message); });
+}
+function buildMemberForm() {
+  document.getElementById('m-member-body').innerHTML = '<div class="fr2"><div class="fg"><label>Full Name</label><input id="nm-name" placeholder="Name"></div><div class="fg"><label>Email</label><input id="nm-email" placeholder="name@kingofcards.in"></div></div>' +
+    '<div class="fr2"><div class="fg"><label>Role</label><select id="nm-role"><option>Admin</option><option>Editor</option><option>Viewer</option></select></div><div class="fg"><label>Team</label><select id="nm-team"><option>Video</option><option>Editing</option><option>Strategy</option><option>Management</option></select></div></div>' +
+    '<div style="display:flex;gap:8px;justify-content:flex-end;padding-top:12px"><button class="btn-sm" onclick="closeM(\'m-member\')">Cancel</button><button class="btn-pri" onclick="doAddMember()">Add Member</button></div>';
+}
+function doAddMember() {
+  var colors = ['#3b82f6','#10b981','#8b5cf6','#ec4899','#f59e0b','#0ea5e9','#f97316'];
+  var nm  = document.getElementById('nm-name').value.trim();
+  var eml = document.getElementById('nm-email').value.trim();
+  if (!nm || !eml) return alert('Name and email required');
+  var payload = {
+    name:nm, email:eml,
+    role:document.getElementById('nm-role').value,
+    team:document.getElementById('nm-team').value,
+    initials:nm.split(' ').map(function(w){ return w[0]; }).join('').toUpperCase().slice(0,2),
+    color:colors[Math.floor(Math.random()*colors.length)],
+    reels:0, shoots:0, edits:0, score:75, password:'changeme123',
+  };
+  STATE.addUser(payload)
+    .then(function(){ closeM('m-member'); renderPeople(); })
+    .catch(function(err){ alert('Add member failed: ' + err.message); });
+}
+
+function editPerson(id) {
+  var p = DB.people.find(function(x){ return (x._id||x.id)===id; }); if (!p) return;
+  document.getElementById('m-member-body').innerHTML =
+    '<div style="text-align:center;padding:6px 0 14px"><div class="av" style="width:44px;height:44px;font-size:14px;margin:0 auto 8px;background:'+p.color+'22;color:'+p.color+'">'+p.initials+'</div>' +
+    '<div style="font-size:13px;font-weight:700">Editing: '+p.name+'</div></div>' +
+    '<div class="fr2"><div class="fg"><label>Full Name</label><input id="ep-name" value="'+p.name+'"></div><div class="fg"><label>Email</label><input id="ep-email" value="'+(p.email||'')+'"></div></div>' +
+    '<div class="fr2"><div class="fg"><label>Role</label><select id="ep-role"><option'+(p.role==='Admin'?' selected':'')+'>Admin</option><option'+(p.role==='Editor'?' selected':'')+'>Editor</option><option'+(p.role==='Viewer'?' selected':'')+'>Viewer</option></select></div>' +
+    '<div class="fg"><label>Team</label><select id="ep-team"><option'+(p.team==='Video'?' selected':'')+'>Video</option><option'+(p.team==='Editing'?' selected':'')+'>Editing</option><option'+(p.team==='Strategy'?' selected':'')+'>Strategy</option><option'+(p.team==='Management'?' selected':'')+'>Management</option></select></div></div>' +
+    '<div class="fr3"><div class="fg"><label>Reels</label><input type="number" id="ep-reels" value="'+p.reels+'"></div><div class="fg"><label>Edits</label><input type="number" id="ep-edits" value="'+p.edits+'"></div><div class="fg"><label>Score %</label><input type="number" id="ep-score" value="'+p.score+'" min="0" max="100"></div></div>' +
+    '<div style="display:flex;gap:8px;justify-content:flex-end;padding-top:12px"><button class="btn-sm" onclick="closeM(\'m-member\')">Cancel</button><button class="btn-pri" onclick="savePersonEdit(\''+id+'\')">Save Changes</button></div>';
+  openM('m-member');
+}
+function savePersonEdit(id) {
+  var nm = document.getElementById('ep-name').value.trim();
+  if (!nm) return alert('Name required');
+  var payload = {
+    name:     nm,
+    email:    document.getElementById('ep-email').value.trim(),
+    role:     document.getElementById('ep-role').value,
+    team:     document.getElementById('ep-team').value,
+    reels:    parseInt(document.getElementById('ep-reels').value) || 0,
+    edits:    parseInt(document.getElementById('ep-edits').value) || 0,
+    score:    parseInt(document.getElementById('ep-score').value) || 0,
+    initials: nm.split(' ').map(function(w){ return w[0]; }).join('').toUpperCase().slice(0,2),
+  };
+  var btn = document.querySelector('#m-member-body .btn-pri');
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+  API.updateUser(id, payload)
+    .then(function(updated) {
+      // Update local cache
+      var idx = DB.people.findIndex(function(x){ return (x._id||x.id)===id; });
+      if (idx !== -1) DB.people[idx] = Object.assign(DB.people[idx], payload);
+      closeM('m-member');
+      renderPeople();
+    })
+    .catch(function(err){
+      if (btn) { btn.disabled = false; btn.textContent = 'Save Changes'; }
+      alert('Save failed: ' + err.message);
+    });
+}
+function renderLearning() {
+  document.getElementById('p-learning').innerHTML = '<div style="text-align:center;padding:40px 20px;background:var(--s2);border:1px solid var(--bdr);border-radius:var(--rl);margin-bottom:14px"><div style="font-size:40px;margin-bottom:10px">🚀</div><div style="font-size:17px;font-weight:800;margin-bottom:7px">Learning Hub has merged with AI Content Lab</div><div style="font-size:12.5px;color:var(--t3);max-width:420px;margin:0 auto 16px">All AI tools — reel scripts, hooks, captions, competitor analysis, trend research and content calendar — are now in the AI Content Lab with a full chat interface.</div><button class="btn-pri" onclick="document.querySelector(\'.si[data-p=content]\').click()">Open AI Content Lab →</button></div>' +
+    '<div class="kg k3"><div class="cc" style="margin:0;cursor:pointer" onclick="document.querySelector(\'.si[data-p=content]\').click()"><div style="font-size:28px;margin-bottom:7px">💡</div><div style="font-size:13px;font-weight:700;margin-bottom:4px">Reel Ideas</div><div style="font-size:11px;color:var(--t3)">5 creative ideas for any occasion</div></div>' +
+    '<div class="cc" style="margin:0;cursor:pointer" onclick="document.querySelector(\'.si[data-p=content]\').click()"><div style="font-size:28px;margin-bottom:7px">📋</div><div style="font-size:13px;font-weight:700;margin-bottom:4px">Reel Scripts</div><div style="font-size:11px;color:var(--t3)">Full 60-second scripts with hook & CTA</div></div>' +
+    '<div class="cc" style="margin:0;cursor:pointer" onclick="document.querySelector(\'.si[data-p=content]\').click()"><div style="font-size:28px;margin-bottom:7px">🗓️</div><div style="font-size:13px;font-weight:700;margin-bottom:4px">Content Calendar</div><div style="font-size:11px;color:var(--t3)">Weekly plan with dates & captions</div></div></div>';
+}
+
+// ═══════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════
+function renderSettings() {
+  document.getElementById('p-settings').innerHTML = '<div class="g2"><div><div class="sh"><div class="slbl" style="margin:0">Platform Connections</div><button class="btn-sm" onclick="addConn()">+ Add</button></div><div id="conn-list"></div><div style="margin-top:10px;padding:10px 12px;background:var(--s3);border-radius:var(--r);font-size:11px;color:var(--t3)"><strong style="color:var(--amber)">🔗 Real OAuth Setup</strong><br>Register a Meta App → set redirect URI → grant instagram_basic + instagram_manage_insights → store encrypted token. Full OAuth code in Tech Spec v2.</div></div>' +
+    '<div><div class="slbl">Team Roles</div><div class="tc" style="margin:0"><table><thead><tr><th>Member</th><th>Role</th><th>Access</th></tr></thead><tbody>'+DB.people.map(function(p){ return '<tr><td><div style="display:flex;align-items:center;gap:7px"><div class="av" style="width:22px;height:22px;font-size:8px;background:'+p.color+'22;color:'+p.color+'">'+p.initials+'</div>'+p.name+'</div></td><td><span class="pill '+(p.role==='Admin'?'p-posted':p.role==='Editor'?'p-scheduled':'p-planned')+'">'+p.role+'</span></td><td style="font-size:10.5px;color:var(--t3)">'+(p.role==='Admin'?'Full access':p.role==='Editor'?'Upload, edit, draft':'Read only')+'</td></tr>'; }).join('')+'</tbody></table></div>' +
+    '<div class="slbl" style="margin-top:14px">Deletion Log ('+DB.deleteLog.length+')</div>' +
+    (DB.deleteLog.length ? '<div class="tc" style="margin:0"><table><thead><tr><th>SKU</th><th>Page</th><th>Deleted</th><th>By</th></tr></thead><tbody>'+DB.deleteLog.map(function(l){ return '<tr><td class="mono">'+l.sku+'</td><td>'+l.page+'</td><td style="font-size:10px">'+new Date(l.deletedAt).toLocaleString()+'</td><td>'+l.deletedBy+'</td></tr>'; }).join('')+'</tbody></table></div>' : '<div style="color:var(--t3);font-size:12px;padding:8px 0">No deletions yet.</div>') +
+    '</div></div>';
+  renderConns();
+}
+function renderConns() {
+  var el = document.getElementById('conn-list'); if (!el) return;
+  el.innerHTML = DB.conns.map(function(c) {
+    return '<div class="conn-item"><div class="conn-l"><div class="conn-ic">'+c.icon+'</div><div><div class="conn-nm">'+c.name+'</div><div class="conn-st '+(c.on?'conn-on':'conn-off')+'">'+(c.on?'● Connected — '+c.sync:'○ Not connected')+'</div></div></div>' +
+      '<div style="display:flex;gap:6px"><button class="'+(c.on?'btn-sm':'btn-pri')+'" style="'+(c.on?'':'padding:4px 11px;font-size:11.5px')+'" onclick="toggleConn(\''+c.id+'\')">'+(c.on?'Reconnect':'Connect')+'</button>' +
+      (c.on?'<button class="btn-sm" style="color:var(--red)" onclick="removeConn(\''+c.id+'\')">✕</button>':'') + '</div></div>';
+  }).join('');
+}
+function toggleConn(id) { var c=DB.conns.find(function(x){ return x.id===id; }); if(c){ c.on=!c.on; c.sync=c.on?'Just now':'Never'; renderConns(); } }
+function removeConn(id) { if(confirm('Remove?')){ DB.conns=DB.conns.filter(function(c){ return c.id!==id; }); renderConns(); } }
+function addConn() { var n=prompt('Platform name:'); if(n) DB.conns.push({id:'c'+Date.now(),name:n,handle:'—',icon:'🔗',on:false,sync:'Never'}); renderConns(); }
+
+// ═══════════════════════════════════════
+// REEL MODAL
+// ═══════════════════════════════════════
+function openReel(id) {
+  var p = DB.posts.find(function(x){ return x.id===id; }); if (!p) return;
+  var stats = [['Views',fmt(p.views)],['Reach',fmt(p.reach)],['Likes',fmt(p.likes)],['Comments',String(p.comments||'—')],['Shares',String(p.shares||'—')],['Saves',String(p.saves||'—')],['Eng. Rate',p.engRate?p.engRate+'%':'—'],['Creator',p.assignedTo],['Page',p.page],['Post Date',p.postDate||'—']];
+  document.getElementById('m-reel-box').innerHTML =
+    '<div style="display:flex;max-height:88vh;">' +
+    '<div style="flex:0 0 300px;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:500px;border-radius:var(--rxl) 0 0 var(--rxl);overflow:hidden;padding:20px;">' +
+    '<div style="font-size:64px;margin-bottom:14px">'+p.thumb+'</div>' +
+    (p.igUrl ? '<a href="'+p.igUrl+'" target="_blank" rel="noreferrer" style="background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:700;font-size:12px">↗ Open on Instagram</a><div style="margin-top:9px;font-size:10px;color:#4b5e75;text-align:center;max-width:220px">Instagram reels cannot embed directly due to browser security (CORS). Connect via Settings to access video URLs via the Graph API.</div>' :
+    '<div style="font-size:12px;color:#4b5e75;text-align:center">No Instagram link yet. Add one in Production tab.</div>') +
+    '</div>' +
+    '<div style="flex:1;padding:20px;overflow-y:auto;">' +
+    '<div style="display:flex;justify-content:space-between;margin-bottom:14px;">' +
+    '<div><div class="mono" style="font-size:11px;color:var(--blue);margin-bottom:4px">'+p.sku+'</div>' +
+    '<div style="font-size:15px;font-weight:800">'+p.desc+'</div>' +
+    '<div style="margin-top:6px;display:flex;gap:5px;flex-wrap:wrap"><span class="pill '+pillCls(p.status)+'">'+p.status+'</span><span class="tag tag-b">'+p.page+'</span><span class="tag tag-p">'+p.shootType+'</span></div></div>' +
+    '<button class="mc" onclick="closeM(\'m-reel\')">✕</button></div>' +
+    '<div class="kg k2" style="gap:8px;margin-bottom:12px">'+stats.map(function(s){ return '<div style="background:var(--s3);border-radius:7px;padding:9px 11px"><div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px">'+s[0]+'</div><div style="font-size:16px;font-weight:800;margin-top:2px">'+(s[1]||'—')+'</div></div>'; }).join('')+'</div>' +
+    '<div style="background:var(--s3);border-radius:7px;padding:9px 11px"><div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">Engagement Score</div>' +
+    '<div style="height:5px;background:var(--s4);border-radius:3px"><div style="width:'+Math.min((p.engRate||0)*18,100)+'%;height:100%;border-radius:3px;background:linear-gradient(90deg,#3b82f6,#10b981)"></div></div>' +
+    '<div style="font-size:10.5px;color:var(--t3);margin-top:4px">'+p.engRate+'% · '+(p.engRate>4?'🔥 Excellent':p.engRate>2?'✓ Good':'📉 Below average')+'</div></div>' +
+    '</div></div>';
+  openM('m-reel');
+}
+
+// ═══════════════════════════════════════
+// ADD POST
+// ═══════════════════════════════════════
+function openAddPost() {
+  var sts = ['Store','Studio','Making','Content','Carousel','Outdoor','Influencer','Concept','Customized Card'];
+  document.getElementById('m-post-body').innerHTML =
+    '<div class="fr3"><div class="fg"><label>Page</label><select id="np-pg">'+['Main','Offer','Custom','Gifts','YouTube'].map(function(p){ return '<option>'+p+'</option>'; }).join('')+'</select></div><div class="fg"><label>SKU</label><input id="np-sku" placeholder="e.g. KNK50250"></div><div class="fg"><label>Shoot Type</label><select id="np-st">'+sts.map(function(s){ return '<option>'+s+'</option>'; }).join('')+'</select></div></div>' +
+    '<div class="fr3"><div class="fg"><label>Shoot Date</label><input type="date" id="np-sd"></div><div class="fg"><label>Edited Date</label><input type="date" id="np-ed"></div><div class="fg"><label>Post Date</label><input type="date" id="np-pd"></div></div>' +
+    '<div class="fr2"><div class="fg"><label>Assigned To</label><select id="np-at">'+DB.people.map(function(p){ return '<option>'+p.name+'</option>'; }).join('')+'</select></div><div class="fg"><label>Status</label><select id="np-ss"><option>Planned</option><option>Shooting</option><option>Edited</option><option>Scheduled</option><option>Posted</option></select></div></div>' +
+    '<div class="fg"><label>Description</label><input id="np-desc" placeholder="Card description, occasion, style…"></div>' +
+    '<div class="fr2"><div class="fg"><label>Instagram Link</label><input id="np-ig" placeholder="https://www.instagram.com/reel/…"></div><div class="fg"><label>Work File Link</label><input id="np-wf" placeholder="https://drive.google.com/…"></div></div>' +
+    '<div style="display:flex;gap:8px;justify-content:flex-end;padding-top:12px"><button class="btn-sm" onclick="closeM(\'m-post\')">Cancel</button><button class="btn-pri" onclick="doAddPost()">Add to Pipeline →</button></div>';
+  openM('m-post');
+}
+function doAddPost() {
+  var emojis = ['🎬','🎨','🖼️','🎴','🃏','💌','🎁','🌸','⭐','🔵'];
+  var btn = document.querySelector('#m-post-body .btn-pri');
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+  var payload = {
+    page:       document.getElementById('np-pg').value,
+    sku:        document.getElementById('np-sku').value || ('DRAFT-' + Date.now().toString().slice(-4)),
+    shootType:  document.getElementById('np-st').value,
+    shootDate:  document.getElementById('np-sd').value  || undefined,
+    editedDate: document.getElementById('np-ed').value  || undefined,
+    postDate:   document.getElementById('np-pd').value  || undefined,
+    assignedTo: document.getElementById('np-at').value,
+    status:     document.getElementById('np-ss').value,
+    desc:       document.getElementById('np-desc').value || 'New post',
+    igUrl:      document.getElementById('np-ig').value,
+    workFile:   document.getElementById('np-wf').value,
+    remarks:'', views:0, reach:0, likes:0, comments:0, shares:0, saves:0, engRate:0,
+    thumb: emojis[Math.floor(Math.random() * emojis.length)],
+  };
+  STATE.addPost(payload)
+    .then(function(){ closeM('m-post'); refresh(); })
+    .catch(function(err){
+      if (btn) { btn.disabled = false; btn.textContent = 'Add to Pipeline →'; }
+      alert('Failed to save: ' + err.message);
+    });
+}
+
+// ═══════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════
+function toggleUD() { document.getElementById('udrop').classList.toggle('vis'); }
+function doLogout() {
+  if (confirm('Log out?')) {
+    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#06090f;color:#f0f6ff;font-family:Inter,sans-serif;text-align:center"><div><div style="font-size:48px;margin-bottom:12px">♠</div><div style="font-size:20px;font-weight:800;margin-bottom:6px">Logged Out</div><div style="font-size:12px;color:#4b5e75;margin-bottom:18px">King of Cards Command Centre v4</div><button onclick="location.reload()" style="background:#3b82f6;color:#fff;border:none;padding:10px 24px;border-radius:8px;font-size:13px;font-family:Inter,sans-serif;cursor:pointer;font-weight:600">Log Back In</button></div></div>';
+  }
+}
+function openM(id) { var el=document.getElementById(id); if(el) el.classList.add('vis'); }
+function closeM(id) { var el=document.getElementById(id); if(el) el.classList.remove('vis'); }
+function closeMO(e, id) { if (e.target.id===id) closeM(id); }
+document.addEventListener('keydown', function(e){ if(e.key==='Escape') document.querySelectorAll('.mo.vis').forEach(function(m){ m.classList.remove('vis'); }); });
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.sb-foot')) document.getElementById('udrop').classList.remove('vis');
+  if (!e.target.closest('#dp-wrap')) { document.getElementById('dp-panel').classList.remove('vis'); document.getElementById('dp-pill').classList.remove('open'); }
+});
+
+document.getElementById('ud-profile').onclick = function() {
+  toggleUD();
+  document.getElementById('m-profile-body').innerHTML = '<div style="text-align:center;padding:10px 0 16px"><div class="av" style="width:50px;height:50px;font-size:17px;margin:0 auto 9px;background:linear-gradient(135deg,#3b82f6,#8b5cf6)">'+DB.user.initials+'</div><div style="font-size:15px;font-weight:800">'+DB.user.name+'</div><div style="font-size:11px;color:var(--t3)">'+DB.user.role+' · King of Cards</div></div>' +
+    '<div class="fg"><label>Display Name</label><input id="pf-nm" value="'+DB.user.name+'"></div>' +
+    '<div class="fg"><label>Email</label><input id="pf-em" value="'+DB.user.email+'"></div>' +
+    '<div style="display:flex;justify-content:flex-end;padding-top:12px"><button class="btn-pri" onclick="DB.user.name=document.getElementById(\'pf-nm\').value;document.getElementById(\'u-nm\').textContent=DB.user.name;closeM(\'m-profile\')">Save Changes</button></div>';
+  openM('m-profile');
+};
+document.getElementById('ud-switch').onclick = function() {
+  toggleUD();
+  document.getElementById('m-switch-body').innerHTML = DB.accounts.map(function(a) {
+    return '<div style="display:flex;align-items:center;gap:10px;padding:9px 8px;border-radius:8px;cursor:pointer" onmouseenter="this.style.background=\'var(--s3)\'" onmouseleave="this.style.background=\'\'" onclick="switchAcct(\''+a.id+'\')"><div class="av" style="width:30px;height:30px;font-size:10px;background:'+a.color+'22;color:'+a.color+'">'+a.initials+'</div><div><div style="font-size:12.5px;font-weight:700">'+a.name+'</div><div style="font-size:10.5px;color:var(--t3)">'+a.role+'</div></div>'+(DB.user.id===a.id?'<span style="margin-left:auto;font-size:10px;color:#10b981">● Active</span>':'')+'</div>';
+  }).join('');
+  openM('m-switch');
+};
+function switchAcct(id) {
+  var a = DB.accounts.find(function(x){ return x.id===id; }); if (!a) return;
+  DB.user = Object.assign({},a,{email:a.name.toLowerCase().split(' ')[0]+'@kingofcards.in'});
+  document.getElementById('uav').textContent = a.initials;
+  document.getElementById('u-nm').textContent = a.name;
+  document.getElementById('u-role').textContent = a.role;
+  closeM('m-switch');
+}
+
+
+// ═══════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════
+(function boot() {
+  updatePillText();
+
+  document.getElementById('p-overview').innerHTML =
+    '<div class="loader-wrap"><div class="loader-spinner"></div><div class="loader-txt">Loading dashboard…</div></div>';
+
+  STATE.init().then(function () {
+    if (DB.people && DB.people.length) {
+      var u = DB.people[0];
+      DB.user = { id: u._id, name: u.name, role: u.role,
+                  initials: u.initials, color: u.color, email: u.email };
+      var unm   = document.getElementById('u-nm');
+      var urole = document.getElementById('u-role');
+      var uav   = document.getElementById('uav');
+      if (unm)   unm.textContent   = u.name;
+      if (urole) urole.textContent = u.role;
+      if (uav)   uav.textContent   = u.initials;
+    }
+    renderOverview();
+  }).catch(function (err) {
+    console.error('Boot failed:', err);
+    document.getElementById('p-overview').innerHTML =
+      '<div class="err-wrap">⚠️ Could not connect to backend. Is the server running?<br><code style="font-size:10px;color:var(--t3)">npm run dev</code></div>';
+  });
+})();
+
+function triggerInstagramSync(accountId) {
+  var btn = event.target;
+  btn.disabled = true; btn.textContent = 'Syncing…';
+  STATE.syncInstagram(accountId)
+    .then(function(results){
+      btn.disabled = false; btn.textContent = 'Sync Now';
+      alert('✅ Sync complete! ' + (results || []).length + ' account(s) updated.');
+      refresh();
+    })
+    .catch(function(err){
+      btn.disabled = false; btn.textContent = 'Sync Now';
+      alert('Sync failed: ' + err.message);
+    });
+}
+</script>
+</body>
+</html>

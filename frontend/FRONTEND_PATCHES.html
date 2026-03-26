@@ -1,0 +1,253 @@
+<!-- ─────────────────────────────────────────────────────────────────────────
+  frontend/index.html — KEY CHANGES ONLY
+  
+  1. Add two new script tags in <head> BEFORE your main inline <script>
+  2. Replace the bottom INIT block
+  3. Replace the 5 mutation functions (saveP, delRow, bulkDel, doAddPost, doAddMonth, saveAdsCell)
+  4. Replace delPerson / buildMemberForm / doAddMember
+  
+  Everything else (CSS, HTML structure, render functions, chart code) stays identical.
+  ──────────────────────────────────────────────────────────────────────────── -->
+
+<!-- ① ADD to <head> before closing </head> ──────────────────────────────── -->
+<script src="/js/api.js"></script>
+<script src="/js/state.js"></script>
+
+<!-- Add this CSS block inside your existing <style> for loading/error states -->
+<style>
+.loader-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;height:200px;gap:12px;}
+.loader-spinner{width:28px;height:28px;border:3px solid var(--bdr);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loader-txt{font-size:12px;color:var(--t3);}
+.err-wrap{display:flex;align-items:center;gap:10px;padding:20px;font-size:12px;color:var(--amber);}
+.sync-btn{background:var(--green-l);color:var(--green);border:1px solid rgba(16,185,129,.25);padding:5px 12px;border-radius:7px;font-size:11.5px;font-weight:600;cursor:pointer;}
+.sync-btn:hover{background:rgba(16,185,129,.22);}
+</style>
+
+<!-- ② REPLACE the INIT block at the bottom (was: updatePillText(); renderOverview();) ──── -->
+<script>
+// ═══════════════════════════════════════
+// BOOT — replaces direct DB object usage
+// ═══════════════════════════════════════
+(function boot() {
+  updatePillText();
+
+  // Show skeleton while data loads
+  document.getElementById('p-overview').innerHTML =
+    '<div class="loader-wrap"><div class="loader-spinner"></div><div class="loader-txt">Loading dashboard…</div></div>';
+
+  STATE.init().then(function () {
+    // Patch user display from API
+    if (DB.people && DB.people.length) {
+      var u = DB.people[0];
+      DB.user = { id: u._id, name: u.name, role: u.role,
+                  initials: u.initials, color: u.color, email: u.email };
+      var unm = document.getElementById('u-nm');
+      var urole = document.getElementById('u-role');
+      var uav  = document.getElementById('uav');
+      if (unm)   unm.textContent   = u.name;
+      if (urole) urole.textContent = u.role;
+      if (uav)   uav.textContent   = u.initials;
+    }
+    renderOverview();
+  }).catch(function (err) {
+    console.error('Boot failed:', err);
+    document.getElementById('p-overview').innerHTML =
+      '<div class="err-wrap">⚠️ Could not connect to backend. Is the server running?<br><code style="font-size:10px;color:var(--t3)">npm run dev</code></div>';
+  });
+})();
+</script>
+
+<!-- ③ REPLACE saveP() — production table inline edits ──────────────────── -->
+<script>
+function saveP(id, field, val) {
+  var p = DB.posts.find(function(x){ return x.id===id || x._id===id; });
+  if (p) p[field] = typeof val === 'string' ? val.trim() : val;
+  // Persist to backend (debounced via STATE)
+  STATE.savePost(id, field, typeof val === 'string' ? val.trim() : val)
+    .catch(function(err){ console.error('saveP failed:', err); });
+}
+</script>
+
+<!-- ④ REPLACE delRow() ──────────────────────────────────────────────────── -->
+<script>
+function delRow(id) {
+  if (!confirm('Delete this row?')) return;
+  var p = DB.posts.find(function(x){ return x.id===id||x._id===id; });
+  if (p) DB.deleteLog.push({ id:id, sku:p.sku, page:p.page,
+    deletedAt:new Date().toISOString(), deletedBy:DB.user ? DB.user.name : 'Unknown' });
+  delete prodSel[id];
+
+  STATE.removePost(id)
+    .then(function(){ rebuildProd(); })
+    .catch(function(err){
+      alert('Delete failed: ' + err.message);
+      STATE.loadPosts().then(rebuildProd);
+    });
+}
+</script>
+
+<!-- ⑤ REPLACE bulkDel() ─────────────────────────────────────────────────── -->
+<script>
+function bulkDel() {
+  var ids = Object.keys(prodSel);
+  if (!ids.length) return;
+  if (!confirm('Delete ' + ids.length + ' rows?')) return;
+
+  STATE.bulkRemovePosts(ids)
+    .then(function(){
+      prodSel = {};
+      rebuildProd();
+      document.getElementById('bulk-wrap').style.display = 'none';
+    })
+    .catch(function(err){ alert('Bulk delete failed: ' + err.message); });
+}
+</script>
+
+<!-- ⑥ REPLACE doAddPost() ───────────────────────────────────────────────── -->
+<script>
+function doAddPost() {
+  var emojis = ['🎬','🎨','🖼️','🎴','🃏','💌','🎁','🌸','⭐','🔵'];
+  var btn = document.querySelector('#m-post-body .btn-pri');
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+
+  var payload = {
+    page:       document.getElementById('np-pg').value,
+    sku:        document.getElementById('np-sku').value || ('DRAFT-' + Date.now().toString().slice(-4)),
+    shootType:  document.getElementById('np-st').value,
+    shootDate:  document.getElementById('np-sd').value  || undefined,
+    editedDate: document.getElementById('np-ed').value  || undefined,
+    postDate:   document.getElementById('np-pd').value  || undefined,
+    assignedTo: document.getElementById('np-at').value,
+    status:     document.getElementById('np-ss').value,
+    desc:       document.getElementById('np-desc').value || 'New post',
+    igUrl:      document.getElementById('np-ig').value,
+    workFile:   document.getElementById('np-wf').value,
+    remarks:    '',
+    views:0, reach:0, likes:0, comments:0, shares:0, saves:0, engRate:0,
+    thumb:      emojis[Math.floor(Math.random() * emojis.length)],
+  };
+
+  STATE.addPost(payload)
+    .then(function(){ closeM('m-post'); refresh(); })
+    .catch(function(err){
+      if (btn) { btn.disabled = false; btn.textContent = 'Add to Pipeline →'; }
+      alert('Failed to save: ' + err.message);
+    });
+}
+</script>
+
+<!-- ⑦ REPLACE doAddMonth() ──────────────────────────────────────────────── -->
+<script>
+function doAddMonth() {
+  var mo      = document.getElementById('am-mo').value;
+  var pg      = document.getElementById('am-pg').value;
+  var months  = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var mIdx    = months.indexOf(mo.split(' ')[0]) + 1;
+  var yr      = mo.split(' ')[1] || new Date().getFullYear();
+  var dateStr = yr + '-' + String(mIdx).padStart(2,'0') + '-01';
+
+  var rows = [
+    { page:pg, month:mo, date:dateStr, type:'Organic',
+      views:   +(document.getElementById('am-ov').value)  || 0,
+      reach:   +(document.getElementById('am-or').value)  || 0,
+      linkClicks:0,
+      profileVisits: +(document.getElementById('am-pv').value) || 0,
+      follows: +(document.getElementById('am-of').value)  || 0,
+      unfollows:+(document.getElementById('am-ou').value) || 0,
+      netFollowers:0, messages:0, adsSpent:0 },
+    { page:pg, month:mo, date:dateStr, type:'Paid',
+      views:   +(document.getElementById('am-pv2').value) || 0,
+      reach:   +(document.getElementById('am-pr').value)  || 0,
+      linkClicks:0,
+      profileVisits: +(document.getElementById('am-pv').value) || 0,
+      follows: +(document.getElementById('am-fo').value)  || 0,
+      unfollows:0, netFollowers:0, messages:0,
+      adsSpent:+(document.getElementById('am-sp').value)  || 0 },
+  ];
+
+  STATE.addMonth(rows)
+    .then(function(){
+      if (FUTURE_MONTHS.indexOf(mo) < 0) FUTURE_MONTHS.push(mo);
+      closeM('m-data'); renderAds();
+    })
+    .catch(function(err){ alert('Save failed: ' + err.message); });
+}
+</script>
+
+<!-- ⑧ REPLACE saveAdsCell() ─────────────────────────────────────────────── -->
+<script>
+function saveAdsCell(page, month, type, field, val) {
+  var n = parseFloat(val.replace(/[₹,LKCr]/g, ''));
+
+  // Optimistic local update
+  var row = DB.metrics.find(function(r){
+    return r.page===page && r.month===month && r.type===type;
+  });
+  if (!row) {
+    row = { page:page, month:month, date:month+' 01', type:type,
+            views:0, reach:0, linkClicks:0, profileVisits:0,
+            follows:0, unfollows:0, netFollowers:0, messages:0, adsSpent:0 };
+    DB.metrics.push(row);
+  }
+  if (!isNaN(n)) row[field] = n;
+
+  // Persist
+  STATE.saveMetricCell(page, month, type, field, n);
+}
+</script>
+
+<!-- ⑨ REPLACE delPerson() ───────────────────────────────────────────────── -->
+<script>
+function delPerson(id) {
+  if (!confirm('Remove this team member?')) return;
+  STATE.removeUser(id)
+    .then(function(){ renderPeople(); })
+    .catch(function(err){ alert('Remove failed: ' + err.message); });
+}
+</script>
+
+<!-- ⑩ REPLACE doAddMember() ─────────────────────────────────────────────── -->
+<script>
+function doAddMember() {
+  var colors = ['#3b82f6','#10b981','#8b5cf6','#ec4899','#f59e0b','#0ea5e9','#f97316'];
+  var nm  = document.getElementById('nm-name').value.trim();
+  var eml = document.getElementById('nm-email').value.trim();
+  if (!nm || !eml) return alert('Name and email required');
+
+  var payload = {
+    name:     nm,
+    email:    eml,
+    role:     document.getElementById('nm-role').value,
+    team:     document.getElementById('nm-team').value,
+    initials: nm.split(' ').map(function(w){ return w[0]; }).join('').toUpperCase().slice(0,2),
+    color:    colors[Math.floor(Math.random() * colors.length)],
+    reels:0, shoots:0, edits:0, score:75,
+    password: 'changeme123', // user should reset on first login
+  };
+
+  STATE.addUser(payload)
+    .then(function(){ closeM('m-member'); renderPeople(); })
+    .catch(function(err){ alert('Add member failed: ' + err.message); });
+}
+</script>
+
+<!-- ⑪ ADD Instagram Sync button handler in Settings panel ───────────────── -->
+<script>
+// Call this from your Settings → "Sync Now" button
+function triggerInstagramSync(accountId) {
+  var btn = event.target;
+  btn.disabled = true; btn.textContent = 'Syncing…';
+
+  STATE.syncInstagram(accountId)
+    .then(function(results){
+      btn.disabled = false; btn.textContent = 'Sync Now';
+      alert('✅ Sync complete! ' + (results || []).length + ' account(s) updated.');
+      refresh();
+    })
+    .catch(function(err){
+      btn.disabled = false; btn.textContent = 'Sync Now';
+      alert('Sync failed: ' + err.message);
+    });
+}
+</script>
